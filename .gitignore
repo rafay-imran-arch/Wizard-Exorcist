@@ -1,0 +1,16 @@
+# Ignore Python compiled files (keeps your git history clean)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore local virtual environments (prevents system conflicts)
+venv/
+ENV/
+env/
+
+# Ignore operating system junk files
+.DS_Store
+Thumbs.db
+
+# Ignore local environment variables / secrets
+.env
