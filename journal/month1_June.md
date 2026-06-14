@@ -20,3 +20,8 @@ By: https://10kstudios.itch.io/
 ### BACKGROUND: 
 By:  https://szadiart.itch.io/ <br> 
 link: szadiart.itch.io/rogue-fantasy-catacombs
+
+
+### JUNE 14 2026
+-spent time re-learning pygame basics as I had forgotten those 
+-Learning from basics tutorials and practicing in a seprate file
