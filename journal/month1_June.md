@@ -22,6 +22,11 @@ By:  https://szadiart.itch.io/ <br>
 link: szadiart.itch.io/rogue-fantasy-catacombs
 
 
-### JUNE 14 2026
+## JUNE 14 2026
 -spent time re-learning pygame basics as I had forgotten those 
 -Learning from basics tutorials and practicing in a seprate file
+
+### <span style="color:##EFBF04;">📅 June 15, 2026 — 2:01 AM</span>
+* **Asset Integration:** Added missing front-facing idle frames, upward back frames, and downward walking cycles to prevent the character from staring into the 4th wall.
+* **OOP Architecture:** Refactored the core game engine from loose scratchpad variables into a self-contained, optimized `Player` class structure.
+* **Next Steps:** *...Buckle up, much more to come...* 🚀
