@@ -27,7 +27,7 @@ class player(object):
 
         # For rendering animation cycles and the sprite 
         self.walk_dir = os.path.join('src','assets','wizards','Char 1','Type 1','Run')
-        self.character_size = (64,64)
+        self.character_size = (128,128)
 
         #idle sprite for all positions
         self.idle = os.path.join('src', 'assets', 'wizards', 'Char 1', 'Type 1', 'Attack')
@@ -118,15 +118,42 @@ class player(object):
 wizard = player(400,200,64,64)
 
 
+
+
+class spell_1():  
+    
+    def __init__(self, target_x, target_y, width, height, facing):
+        self.width = width
+        self.height = height
+        self.facing = facing 
+        self.vel = 8
+
+        self.x_pos = target_x - (self.height // 2)
+        self.y_pos = target_y - (self.width // 2)
+
+        self.spell_dir = os.path.join('src', 'assets', 'spells')
+
+        self.spell_1 = pygame.transform.scale(
+            pygame.image .load(os.path.join(self.spell_dir, 'spell_1.png')),
+            (self.width, self.height)
+        )
+
+    def draw_spell(self, screen):
+        screen.blit(self.spell_1, (self.x_pos,self.y_pos))
+
 #function to make things appear (magically!?)
 def render_game():
-    screen.fill("Black")
+    screen.fill("Grey")
     wizard.draw(screen)
+    for spell in spells:
+        spell.draw_spell(screen)
     #Setting frame rate
     pygame.display.update()
     clock.tick(30)
 
 
+spell_limit = 2
+spells = []
 run = True
 
 #Main loop 
@@ -137,13 +164,26 @@ while run:
         if event.type == pygame.QUIT:
             run = False
 
+    for spell in spells:
+        if (spell.x_pos < 800 and spell.x_pos >0) and (spell.y_pos < 400 and spell.y_pos > 0):
+            if spell.facing == 'upwards':
+                spell.y_pos -= spell.vel
+            elif spell.facing == 'downwards':
+                spell.y_pos += spell.vel
+            elif spell.facing  == 'right':
+                spell.x_pos += spell.vel
+            elif spell.facing == 'left':
+                spell.x_pos -= spell.vel
+        else:
+            spells.pop(spells.index(spell))
+
+
     #check key presses for controls 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         wizard.x_pos -= wizard.vel
         wizard.facing = "left"
         wizard.is_moving = True
-
     elif keys[pygame.K_RIGHT]:
         wizard.x_pos += wizard.vel
         wizard.facing = "right"
@@ -158,6 +198,11 @@ while run:
         wizard.is_moving = True
     else:
         wizard.is_moving = False
+    
+    if keys[pygame.K_SPACE]:
+        if len(spells) < spell_limit:
+            spells.append(spell_1(round(wizard.x_pos + wizard.width // 2), round(wizard.y_pos + wizard.height // 2), 64, 64, wizard.facing))
+
 
     render_game()
 
