@@ -118,6 +118,52 @@ class player(object):
 wizard = player(400,200,64,64)
 
 
+class enemy():
+
+    def __init__(self, x, y, width, height, end):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.end = end  
+        self.path = (self.x, self.end)
+        self.walk_count = 0
+        self.vel = 3
+        
+
+        self.enemy_dir = os.path.join('src', 'assets', 'creatures')
+        self.ghost = pygame.transform.scale(
+            pygame.image.load(os.path.join(self.enemy_dir, 'enemy.png')),
+            (128,128)
+        )
+
+
+    def draw(self, screen):
+        self.move()
+        if self.walk_count + 1 < 33:
+            self.walk_count = 0
+        
+        if self.vel > 0:
+            screen.blit(self.ghost, (self.x, self.y))
+            self.walk_count += 1
+        else:
+            screen.blit(self.ghost, (self.x, self.y))
+            self.walk_count += 1
+
+
+    def move(self):
+        if self.vel > 0:
+            if self.x + self.vel < self.path[1]:
+                self.x += self.vel
+            else:
+                self.vel = self.vel * -1
+                self.walk_count = 0
+        else:
+            self.vel = self.vel * -1
+            self.walk_count = 0
+        pass
+
+
 
 
 class spell_1():  
@@ -144,6 +190,7 @@ class spell_1():
 #function to make things appear (magically!?)
 def render_game():
     screen.fill("Grey")
+    spooky.draw(screen)
     wizard.draw(screen)
     for spell in spells:
         spell.draw_spell(screen)
@@ -151,7 +198,7 @@ def render_game():
     pygame.display.update()
     clock.tick(30)
 
-
+spooky = enemy(100,200,64,64,200)
 spell_limit = 2
 spells = []
 run = True
