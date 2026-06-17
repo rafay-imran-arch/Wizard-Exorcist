@@ -16,6 +16,28 @@ class enemy():
         self.path = (self.x, self.end)
         self.walk_count = 0
         self.vel = 3
+        self.facing = 'right'
+        self.message = "Hello I am a ghost I'll spooke you to death"
+        self.reply = "What can you do about it? Kill me or Die ?"
+        self.Joker = "I will spook you too hahahahahah"
+        self.hello_dev = "Hello developer i am going to spook you too"
+        self.I = "Hello I am a ghost I spook people and kill them for fun !!! hahahaha I can do this all day you can tdefeat me"
+        self.I = "hello i am the steak of world "
+        self.dimension = "hello we belong to the phantom dimension and We are here to spook you, we broke into your dimension when the " \
+        "barries between your and mine diemnsion collided resulting i s a rift. And through this rift we got into your wold and then the rest is history " \
+        "we are going to conqwuere this world also that'll make our wolrd more tringer so that we can create arift in other dimension too." \
+        "and neither will they survive......." \
+        "we plan to take over the whole of multi-versal dimensions and will leave no place our darkness will spread through out and be known to" \
+        "every species to come and we'll make sure we aree the dominant ones"
+        self.cutoff = "...haha are you sure about that my mystical spells are enough to stip you guys off pride" \
+        "Vweriosius Werdicardo!! Expelliariumoius vindorg... See this this just granted me enough power to kill you guys off" \
+        "Now i';; spawn my clones and be done with you guys." \
+        "My clones will use different spells and corner you rather boc you guys inside and rip your sprituality out of you We wont leave you alive" \
+        "You guys think we dont knkow you but rather we ave been taught in early school about who you guys are how to acasue darkness but most importantly" \
+        "what weakness you guys have its like we know all your hitpoints we know what kills you, we know what hurts you and we know how to torture you!" \
+        "Yes we will torture you ...."
+
+
 
         self.enemy_dir = os.path.join('src', 'assets', 'creatures')
         self.ghost = pygame.transform.scale(
@@ -89,7 +111,24 @@ def game_render():
     spooky.draw(screen)
     for laser in lasers:
         laser.draw(screen)
-    
+    for laser in lasers:
+        laser.draw(screen)
+    for laser in lasers:
+        laser.draw(screen)
+    spooky.draw(screen)
+    for laser in lasers:
+        laser.draw(screen)
+    for laser in lasers:
+        laser.draw(screen)
+    for laser in lasers:
+        laser.draw(screen)
+    for laser in lasers:
+        laser.draw(screen)
+    spooky.draw(screen)
+    spooky.draw(screen)
+    spooky.draw(screen)
+    spooky.draw(screen)
+    spooky.draw(screen)
     pygame.display.update()
     clock.tick(30)
 
