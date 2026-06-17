@@ -3,7 +3,6 @@ import os
 
 pygame.init()
 
-
 # Some essentials
 screen = pygame.display.set_mode((800,400))
 pygame.display.set_caption("First Draft WE")
@@ -24,10 +23,14 @@ class player(object):
         self.walk_count = 0
         self.facing = "downwards"
         self.is_moving = False
+        self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
 
         # For rendering animation cycles and the sprite 
         self.walk_dir = os.path.join('src','assets','wizards','Char 1','Type 1','Run')
         self.character_size = (128,128)
+        
+        # Initialize the rect immediately so K_SPACE doesn't crash on frame 1
+        self.rect = pygame.Rect(self.x_pos, self.y_pos, self.character_size[0], self.character_size[1])
 
         #idle sprite for all positions
         self.idle = os.path.join('src', 'assets', 'wizards', 'Char 1', 'Type 1', 'Attack')
@@ -52,7 +55,6 @@ class player(object):
             pygame.image.load(os.path.join(self.idle, 'atk_4.png')),
             self.character_size
         )
-
 
         #walk right cycle list 
         self.walk_right = [
@@ -84,10 +86,12 @@ class player(object):
 
     #defining a draw function so you can see how insane you look
     def draw(self, screen):
+        # Update rect position alongside position changes
+        self.rect.x = self.x_pos
+        self.rect.y = self.y_pos
 
         if self.walk_count + 1 >= 24:
             self.walk_count = 0
-
 
         if not self.is_moving:
             if self.facing == "right":
@@ -112,11 +116,12 @@ class player(object):
             elif self.facing == "downwards":
                 screen.blit(self.walk_down[self.walk_count // 6], (self.x_pos,self.y_pos))
                 self.walk_count += 1
+        self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
+        pygame.draw.rect(screen, (0,255,0), self.hit_box,2)
 
 #making an player object i.e the magical wizard
-
 wizard = player(400,200,64,64)
-
+wizard2 = player(300,100,64,64)
 
 class enemy():
 
@@ -129,28 +134,23 @@ class enemy():
         self.path = (self.x, self.end)
         self.walk_count = 0
         self.vel = 3
+        self.hit_box = (self.x + 20, self.y, 90,128)
         
-
         self.enemy_dir = os.path.join('src', 'assets', 'creatures')
         self.ghost = pygame.transform.scale(
             pygame.image.load(os.path.join(self.enemy_dir, 'enemy.png')),
             (128,128)
         )
 
-
     def draw(self, screen):
         self.move()
-        if self.walk_count + 1 < 33:
+        if self.walk_count + 1 < 44:
             self.walk_count = 0
         
-        if self.vel > 0:
-            screen.blit(self.ghost, (self.x, self.y))
-            self.walk_count += 1
-        else:
-            screen.blit(self.ghost, (self.x, self.y))
-            self.walk_count += 1
-
-
+        screen.blit(self.ghost, (self.x, self.y))
+        self.walk_count += 1
+        self.hit_box = (self.x + 20, self.y, 90, 128)
+        pygame.draw.rect(screen, (255,0,0), self.hit_box, 2)
     def move(self):
         if self.vel > 0:
             if self.x + self.vel < self.path[1]:
@@ -159,33 +159,41 @@ class enemy():
                 self.vel = self.vel * -1
                 self.walk_count = 0
         else:
-            self.vel = self.vel * -1
-            self.walk_count = 0
-        pass
-
-
+            if self.x + self.vel > self.path[0]:
+                self.x += self.vel
+            else:
+                self.vel = self.vel * -1
+                self.walk_count = 0
 
 
 class spell_1():  
     
-    def __init__(self, target_x, target_y, width, height, facing):
+    def __init__(self, spawn_center, width, height, facing):
         self.width = width
         self.height = height
         self.facing = facing 
         self.vel = 8
 
-        self.x_pos = target_x - (self.height // 2)
-        self.y_pos = target_y - (self.width // 2)
 
         self.spell_dir = os.path.join('src', 'assets', 'spells')
-
         self.spell_1 = pygame.transform.scale(
-            pygame.image .load(os.path.join(self.spell_dir, 'spell_1.png')),
+            pygame.image.load(os.path.join(self.spell_dir, 'spell_1.png')),
             (self.width, self.height)
-        )
+        )    
+
+        # Set up standard Pygame center alignment
+        self.rect = self.spell_1.get_rect()
+        self.rect.center = spawn_center
+        # Store positions safely as decimals/floats for consistency
+        self.x_pos = float(self.rect.x)
+        self.y_pos = float(self.rect.y)
 
     def draw_spell(self, screen):
-        screen.blit(self.spell_1, (self.x_pos,self.y_pos))
+        # Sync updates back to the actual drawing rectangle coordinates
+        self.rect.x = int(self.x_pos)
+        self.rect.y = int(self.y_pos)
+        screen.blit(self.spell_1, (self.rect.x, self.rect.y))
+
 
 #function to make things appear (magically!?)
 def render_game():
@@ -194,7 +202,6 @@ def render_game():
     wizard.draw(screen)
     for spell in spells:
         spell.draw_spell(screen)
-    #Setting frame rate
     pygame.display.update()
     clock.tick(30)
 
@@ -211,19 +218,19 @@ while run:
         if event.type == pygame.QUIT:
             run = False
 
-    for spell in spells:
-        if (spell.x_pos < 800 and spell.x_pos >0) and (spell.y_pos < 400 and spell.y_pos > 0):
+    # Safe array slice method [:] stops skipping logic loops when popping offscreen objects
+    for spell in spells[:]:
+        if (spell.x_pos < 800 and spell.x_pos > -64) and (spell.y_pos < 400 and spell.y_pos > -64):
             if spell.facing == 'upwards':
                 spell.y_pos -= spell.vel
             elif spell.facing == 'downwards':
                 spell.y_pos += spell.vel
-            elif spell.facing  == 'right':
+            elif spell.facing == 'right':
                 spell.x_pos += spell.vel
             elif spell.facing == 'left':
                 spell.x_pos -= spell.vel
         else:
-            spells.pop(spells.index(spell))
-
+            spells.remove(spell)
 
     #check key presses for controls 
     keys = pygame.key.get_pressed()
@@ -248,10 +255,8 @@ while run:
     
     if keys[pygame.K_SPACE]:
         if len(spells) < spell_limit:
-            spells.append(spell_1(round(wizard.x_pos + wizard.width // 2), round(wizard.y_pos + wizard.height // 2), 64, 64, wizard.facing))
-
+            spells.append(spell_1(wizard.rect.center, 64, 64, wizard.facing))
 
     render_game()
 
-#To close the game
 pygame.quit()
