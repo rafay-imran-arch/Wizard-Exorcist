@@ -7,7 +7,7 @@ pygame.init()
 screen = pygame.display.set_mode((800,400))
 pygame.display.set_caption("First Draft WE")
 clock = pygame.time.Clock()
-
+score = 0
 
 #Creating a class for wizard/player 
 class player(object):
@@ -119,6 +119,9 @@ class player(object):
         self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
         pygame.draw.rect(screen, (0,255,0), self.hit_box,2)
 
+    def hit(self):
+        pass
+    
 #making an player object i.e the magical wizard
 wizard = player(400,200,64,64)
 wizard2 = player(300,100,64,64)
@@ -165,43 +168,67 @@ class enemy():
                 self.vel = self.vel * -1
                 self.walk_count = 0
 
-
-class spell_1():  
+    def hit(self):
+        pass
+class spells_shoot():
     
-    def __init__(self, spawn_center, width, height, facing):
-        self.width = width
-        self.height = height
-        self.facing = facing 
+    def __init__(self, x_pos, y_pos, facing):
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.facing = facing
         self.vel = 8
 
-
-        self.spell_dir = os.path.join('src', 'assets', 'spells')
-        self.spell_1 = pygame.transform.scale(
+        self.spell_dir = os.path.join("src", 'assets', 'spells')
+        self.blue_spell = pygame.transform.scale(
             pygame.image.load(os.path.join(self.spell_dir, 'spell_1.png')),
-            (self.width, self.height)
-        )    
+            (64,64)
+        )
+    def draw(self, screen):
+        screen.blit(self.blue_spell, (self.x_pos,self.y_pos))
 
-        # Set up standard Pygame center alignment
-        self.rect = self.spell_1.get_rect()
-        self.rect.center = spawn_center
-        # Store positions safely as decimals/floats for consistency
-        self.x_pos = float(self.rect.x)
-        self.y_pos = float(self.rect.y)
 
-    def draw_spell(self, screen):
-        # Sync updates back to the actual drawing rectangle coordinates
-        self.rect.x = int(self.x_pos)
-        self.rect.y = int(self.y_pos)
-        screen.blit(self.spell_1, (self.rect.x, self.rect.y))
+class revive():
+    
+    def __init__(self, x_pos, y_pos, width, height):
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.width = width
+        self.height = height
+        self.vel = 2
+        self.text = "You have used one health spell"
+        self.health_spell_count = 10
 
+    def draw(self, screen):
+        pass 
+
+    def hit(self):
+        pass
+
+class spell_book():
+
+    def __init__(self, x_pos, y_pos, pointer, cell, row):
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.pointer = pointer
+        self.cell = cell
+        self.row = row
+
+        self.graphics = "This is to be decided I plan to make an gui thing that'll work when the player points and uses" \
+        "The user can point at the spells and select the spells " \
+        "I in tent to add options for spells along with strength then i plan to add levels to unlock some spells." \
+        "A user can only use 3 spells at a single time thats his mana inventory nothing more " \
+        "until and unless he discoveres a certain ruin object/ parchment in the castle ot something that gives him mana" \
+        "the mana makes him stronger that then he can use to add an additional spell to his inventory" \
+        "then I'll add a system of mana convertion"
 
 #function to make things appear (magically!?)
 def render_game():
     screen.fill("Grey")
     spooky.draw(screen)
+    spooky2.draw(screen)
     wizard.draw(screen)
     for spell in spells:
-        spell.draw_spell(screen)
+        spell.draw(screen)
     pygame.display.update()
     clock.tick(30)
 
@@ -209,9 +236,16 @@ spooky = enemy(100,200,64,64,200)
 spell_limit = 2
 spells = []
 run = True
-
-#Main loop 
+shoot_loop = 0
+spooky2 = enemy(200,100,64,64,600)
+#Main loop
 while run:
+
+    if shoot_loop > 0:
+        shoot_loop += 1
+    if shoot_loop > 3:
+        shoot_loop = 0
+
 
     #check for event
     for event in pygame.event.get():
@@ -219,18 +253,28 @@ while run:
             run = False
 
     # Safe array slice method [:] stops skipping logic loops when popping offscreen objects
-    for spell in spells[:]:
-        if (spell.x_pos < 800 and spell.x_pos > -64) and (spell.y_pos < 400 and spell.y_pos > -64):
-            if spell.facing == 'upwards':
+    for spell in spells:
+        if spell.y_pos < spooky.hit_box[1] + spooky.hit_box[3] and spell.y_pos > spooky.hit_box[1]:
+            if spell.x_pos > spooky.hit_box[0] and spell.x_pos < spooky.hit_box[0] + spooky.hit_box[2]:
+                spooky.hit()
+                spells.pop(spells.index(spell))
+
+        if spell.y_pos < spooky2.hit_box[1] + spooky2.hit_box[3] and spell.y_pos > spooky2.hit_box[1]:
+            if spell.x_pos > spooky2.hit_box[0] and spell.x_pos < spooky2.hit_box[0] + spooky2.hit_box[2]:
+                spooky2.hit()
+                spells.pop(spells.index(spell))
+                 
+        if (spell.x_pos < 800 and spell.x_pos > 0) and (spell.y_pos < 400 and spell.y_pos > 0):
+            if spell.facing == "right":
+                spell.x_pos += spell.vel
+            elif spell.facing == "left":
+                spell.x_pos -= spell.vel
+            elif spell.facing == "upwards":
                 spell.y_pos -= spell.vel
             elif spell.facing == 'downwards':
                 spell.y_pos += spell.vel
-            elif spell.facing == 'right':
-                spell.x_pos += spell.vel
-            elif spell.facing == 'left':
-                spell.x_pos -= spell.vel
-        else:
-            spells.remove(spell)
+        else: 
+            spells.pop(spells.index(spell))
 
     #check key presses for controls 
     keys = pygame.key.get_pressed()
@@ -253,10 +297,12 @@ while run:
     else:
         wizard.is_moving = False
     
-    if keys[pygame.K_SPACE]:
+    if keys[pygame.K_SPACE] and shoot_loop == 0:
         if len(spells) < spell_limit:
-            spells.append(spell_1(wizard.rect.center, 64, 64, wizard.facing))
-
+            spells.append(spells_shoot(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
+        shoot_loop = 1
     render_game()
 
 pygame.quit()
+
+
