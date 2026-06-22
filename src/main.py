@@ -24,6 +24,8 @@ class player(object):
         self.facing = "downwards"
         self.is_moving = False
         self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
+        self.mana = 10
+        self.health = 10 
 
         # For rendering animation cycles and the sprite 
         self.walk_dir = os.path.join('src','assets','wizards','Char 1','Type 1','Run')
@@ -119,6 +121,10 @@ class player(object):
         self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
         pygame.draw.rect(screen, (0,255,0), self.hit_box,2)
 
+        pygame.draw.rect(screen, (255,128,240), (self.hit_box[0], self.hit_box[1] - 20, 80, 10))
+        pygame.draw.rect(screen, (128,255,210), (self.hit_box[0], self.hit_box[1] - 20, 80 - ((80/10) * (10 - self.mana)), 10))
+        pygame.draw.rect(screen, (255,0,0), (self.hit_box[0], self.hit_box[1] - 10, 80, 10))
+        pygame.draw.rect(screen, (0,255,0), (self.hit_box[0], self.hit_box[1] - 10, 80 - ((80/10)*(10- self.health)), 10))
     def hit(self):
         pass
     
@@ -138,7 +144,10 @@ class enemy():
         self.walk_count = 0
         self.vel = 3
         self.hit_box = (self.x + 20, self.y, 90,128)
-        
+        self.health = 10
+        self.visible = True    
+
+
         self.enemy_dir = os.path.join('src', 'assets', 'creatures')
         self.ghost = pygame.transform.scale(
             pygame.image.load(os.path.join(self.enemy_dir, 'enemy.png')),
@@ -147,13 +156,17 @@ class enemy():
 
     def draw(self, screen):
         self.move()
-        if self.walk_count + 1 < 44:
-            self.walk_count = 0
-        
-        screen.blit(self.ghost, (self.x, self.y))
-        self.walk_count += 1
-        self.hit_box = (self.x + 20, self.y, 90, 128)
-        pygame.draw.rect(screen, (255,0,0), self.hit_box, 2)
+        if self.visible:
+            if self.walk_count + 1 < 44:
+                self.walk_count = 0
+            
+            screen.blit(self.ghost, (self.x, self.y))
+            self.walk_count += 1
+            pygame.draw.rect(screen, (255,123,140), (self.hit_box[0], self.hit_box[1] - 20, 50, 10))
+            pygame.draw.rect(screen, (128,255,200), (self.hit_box[0], self.hit_box[1] - 20, 50 - ((50/10) * (10 - self.health)), 10))
+
+            self.hit_box = (self.x + 20, self.y, 90, 128)
+            pygame.draw.rect(screen, (255,0,0), self.hit_box, 2)
     def move(self):
         if self.vel > 0:
             if self.x + self.vel < self.path[1]:
@@ -169,7 +182,12 @@ class enemy():
                 self.walk_count = 0
 
     def hit(self):
-        pass
+        if self.health > 0:
+            self.health -= 1
+        else:
+            self.visible = False
+
+
 class spells_shoot():
     
     def __init__(self, x_pos, y_pos, facing):
@@ -219,11 +237,18 @@ class spell_book():
         "A user can only use 3 spells at a single time thats his mana inventory nothing more " \
         "until and unless he discoveres a certain ruin object/ parchment in the castle ot something that gives him mana" \
         "the mana makes him stronger that then he can use to add an additional spell to his inventory" \
-        "then I'll add a system of mana convertion"
+        "then I'll add a system of mana convertion then ill make sure teo add mana levels and mana stamina that goes down and stuff like taht " \
+        "then the character and te player becomes slower and cannot use enough spells and in turn he loses ofc. " \
+        "I also intent to add a bio of all the spells and an audio to name and call those spells?" \
+        
 
 #function to make things appear (magically!?)
 def render_game():
     screen.fill("Grey")
+    text = font.render(f'Score: {score}', 1, (255,0,0))
+    game_name = font.render(f"Weclome to Wizard Excorcist: Redemption of the fallen castle", 1, (128,100,255))
+    screen.blit(game_name,(70, 20))
+    screen.blit(text, (670, 20))
     spooky.draw(screen)
     spooky2.draw(screen)
     wizard.draw(screen)
@@ -232,6 +257,8 @@ def render_game():
     pygame.display.update()
     clock.tick(30)
 
+
+font = pygame.font.SysFont('comicsans', 30, True)
 spooky = enemy(100,200,64,64,200)
 spell_limit = 2
 spells = []
@@ -257,6 +284,8 @@ while run:
         if spell.y_pos < spooky.hit_box[1] + spooky.hit_box[3] and spell.y_pos > spooky.hit_box[1]:
             if spell.x_pos > spooky.hit_box[0] and spell.x_pos < spooky.hit_box[0] + spooky.hit_box[2]:
                 spooky.hit()
+                wizard.mana -= 1
+                score += 1
                 spells.pop(spells.index(spell))
 
         if spell.y_pos < spooky2.hit_box[1] + spooky2.hit_box[3] and spell.y_pos > spooky2.hit_box[1]:
@@ -265,6 +294,7 @@ while run:
                 spells.pop(spells.index(spell))
                  
         if (spell.x_pos < 800 and spell.x_pos > 0) and (spell.y_pos < 400 and spell.y_pos > 0):
+        
             if spell.facing == "right":
                 spell.x_pos += spell.vel
             elif spell.facing == "left":
@@ -273,6 +303,7 @@ while run:
                 spell.y_pos -= spell.vel
             elif spell.facing == 'downwards':
                 spell.y_pos += spell.vel
+        
         else: 
             spells.pop(spells.index(spell))
 
@@ -297,6 +328,10 @@ while run:
     else:
         wizard.is_moving = False
     
+    if keys[pygame.K_COMMA]:
+        if wizard.mana == 0:
+            wizard.mana += 1
+        
     if keys[pygame.K_SPACE] and shoot_loop == 0:
         if len(spells) < spell_limit:
             spells.append(spells_shoot(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
