@@ -26,7 +26,7 @@ class player(object):
         self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
         self.mana = 10
         self.health = 10 
-
+        self.halth = "I need to make the health lose once the character hit box is = to the ghost hitbox woeking on that tomorrow"
         # For rendering animation cycles and the sprite 
         self.walk_dir = os.path.join('src','assets','wizards','Char 1','Type 1','Run')
         self.character_size = (128,128)
@@ -125,8 +125,15 @@ class player(object):
         pygame.draw.rect(screen, (128,255,210), (self.hit_box[0], self.hit_box[1] - 20, 80 - ((80/10) * (10 - self.mana)), 10))
         pygame.draw.rect(screen, (255,0,0), (self.hit_box[0], self.hit_box[1] - 10, 80, 10))
         pygame.draw.rect(screen, (0,255,0), (self.hit_box[0], self.hit_box[1] - 10, 80 - ((80/10)*(10- self.health)), 10))
+
     def hit(self):
-        pass
+        if self.health > 0:
+            self.health -= 1
+            self.walk_count = 0
+            pygame.display.update()
+        elif self.health == 0:
+            spell_shoot_sound.play()
+
     
 #making an player object i.e the magical wizard
 wizard = player(400,200,64,64)
@@ -231,15 +238,22 @@ class spell_book():
         self.cell = cell
         self.row = row
 
-        self.graphics = "This is to be decided I plan to make an gui thing that'll work when the player points and uses" \
-        "The user can point at the spells and select the spells " \
-        "I in tent to add options for spells along with strength then i plan to add levels to unlock some spells." \
-        "A user can only use 3 spells at a single time thats his mana inventory nothing more " \
-        "until and unless he discoveres a certain ruin object/ parchment in the castle ot something that gives him mana" \
-        "the mana makes him stronger that then he can use to add an additional spell to his inventory" \
-        "then I'll add a system of mana convertion then ill make sure teo add mana levels and mana stamina that goes down and stuff like taht " \
-        "then the character and te player becomes slower and cannot use enough spells and in turn he loses ofc. " \
-        "I also intent to add a bio of all the spells and an audio to name and call those spells?" \
+        self.graphics = "This thing is yet to be decided as I plan to make something of a gui thing the player can open this up mid commbat " \
+        "then select its spells I will possible give 3 spells to players at most but for the starting levels he can only use one spell" \
+        "then I will decide on the world building on how he gets the book to use other spells or rather learn other spells after deffeating some enemies" \
+        "hmm maybe i want to keep that for the mana regeneration thing or something lets see what I'll do" \
+        "If i really really think hard enought i can add secret chests per room in the castle which appears only once you defeat the enemies" \
+        "after you defeat the enemies in that room the box appears with the scroll of spell which the wizards book absorbs automatically hmmm" \
+        "some animation effect ? or something I'll have to work on this maybe leave this for part 2 I suppose ? " \
+        "these are some insane ideas I hope I am able to complete these" \
+        "also i need to incorportate the system of room lock once the player moves in a room he gets locked in until he defeaths the enemies" \
+        "and then after all enemies die the doors open? like the binding of issac stuff I think i suppose" \
+        "plus what else can I add in this ? I can also incorporte the system of boss fights to make hi mana stronger ? but how many levels do I " \
+        "intend to make for this installment? IDK yet but these are some good ideas and I hope I am able to work on these." \
+        "I also need the enemies to attack the player with some kind of attack? also follow the player around rather that in one straight plane" \
+        "or something" \
+        "i really need to so something about this stuff I need to learn ore and more and more" \
+        "May i be able to finish this game"
         
 
 #function to make things appear (magically!?)
@@ -257,6 +271,14 @@ def render_game():
     pygame.display.update()
     clock.tick(30)
 
+
+
+sound_dir = os.path.join('src','assets', 'sounds')
+recharge_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'recharge.mp3'))
+spell_shoot_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spellshoot.mp3'))
+spell_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell.mp3'))
+game_music = pygame.mixer.music.load(os.path.join(sound_dir, "bg.mp3"))
+pygame.mixer.music.play(-1)
 
 font = pygame.font.SysFont('comicsans', 30, True)
 spooky = enemy(100,200,64,64,200)
@@ -278,6 +300,13 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+
+
+    if wizard.hit_box[1] < spooky.hit_box[1] + spooky.hit_box[3] and wizard.hit_box[3] > spooky.hit_box[1]:
+        if wizard.hit_box[0] + wizard.hit_box[2] > spooky.hit_box[0] and wizard.hit_box[0] < spooky.hit_box[0] + spooky.hit_box[2]:
+            spell_shoot_sound.play()
+            wizard.hit()
+            score -= 2
 
     # Safe array slice method [:] stops skipping logic loops when popping offscreen objects
     for spell in spells:
@@ -303,7 +332,6 @@ while run:
                 spell.y_pos -= spell.vel
             elif spell.facing == 'downwards':
                 spell.y_pos += spell.vel
-        
         else: 
             spells.pop(spells.index(spell))
 
@@ -329,11 +357,13 @@ while run:
         wizard.is_moving = False
     
     if keys[pygame.K_COMMA]:
-        if wizard.mana == 0:
+        recharge_sound.play()
+        if wizard.mana < 10:
             wizard.mana += 1
-        
+    
     if keys[pygame.K_SPACE] and shoot_loop == 0:
         if len(spells) < spell_limit:
+            spell_sound.play()
             spells.append(spells_shoot(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
         shoot_loop = 1
     render_game()
