@@ -1,6 +1,6 @@
 import pygame
 import os 
-
+from sprites import player
 pygame.init()
 
 # Some essentials
@@ -8,131 +8,6 @@ screen = pygame.display.set_mode((800,400))
 pygame.display.set_caption("First Draft WE")
 clock = pygame.time.Clock()
 score = 0
-
-#Creating a class for wizard/player 
-class player(object):
-
-    #player's attributes
-    def __init__(self, x_pos, y_pos, width, height):
-        self.x_pos = x_pos
-        self.y_pos = y_pos
-        self.width = width
-        self.height = height
-        self.vel = 5
-        self.isjump = False
-        self.walk_count = 0
-        self.facing = "downwards"
-        self.is_moving = False
-        self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
-        self.mana = 10
-        self.health = 10 
-        self.halth = "I need to make the health lose once the character hit box is = to the ghost hitbox woeking on that tomorrow"
-        # For rendering animation cycles and the sprite 
-        self.walk_dir = os.path.join('src','assets','wizards','Char 1','Type 1','Run')
-        self.character_size = (128,128)
-        
-        # Initialize the rect immediately so K_SPACE doesn't crash on frame 1
-        self.rect = pygame.Rect(self.x_pos, self.y_pos, self.character_size[0], self.character_size[1])
-
-        #idle sprite for all positions
-        self.idle = os.path.join('src', 'assets', 'wizards', 'Char 1', 'Type 1', 'Attack')
-
-        #Idle up
-        self.idle_up = pygame.transform.scale(
-            pygame.image.load(os.path.join(self.idle, 'atk_1.png')),
-            self.character_size
-        )
-        #idle right 
-        self.idle_right = pygame.transform.scale(
-            pygame.image.load(os.path.join(self.idle, 'atk_2.png')),
-            self.character_size
-        )
-        #idle down
-        self.idle_down = pygame.transform.scale(
-            pygame.image.load(os.path.join(self.idle, 'atk_3.png')),
-            self.character_size
-        )
-        #idle left
-        self.idle_left = pygame.transform.scale(
-            pygame.image.load(os.path.join(self.idle, 'atk_4.png')),
-            self.character_size
-        )
-
-        #walk right cycle list 
-        self.walk_right = [
-            pygame.transform.scale(
-                pygame.image.load(os.path.join(self.walk_dir, f"Run_{i}.png")),
-                self.character_size
-            ) for i in range(4)
-        ]
-
-        #walk left cycle list
-        self.walk_left = [
-            pygame.transform.flip(sprite, True, False) for sprite in self.walk_right
-        ]
-
-        #walk up cycle list
-        self.walk_up = [
-            pygame.transform.scale(
-                pygame.image.load(os.path.join(self.walk_dir, f"RunUP_{i}.png")),
-                self.character_size
-            ) for i in range(4)
-        ]
-
-        self.walk_down = [
-            pygame.transform.scale(
-                pygame.image.load(os.path.join(self.walk_dir, f"RunDW_{i}.png")),
-                self.character_size
-            ) for i in range(4)
-        ]
-
-    #defining a draw function so you can see how insane you look
-    def draw(self, screen):
-        # Update rect position alongside position changes
-        self.rect.x = self.x_pos
-        self.rect.y = self.y_pos
-
-        if self.walk_count + 1 >= 24:
-            self.walk_count = 0
-
-        if not self.is_moving:
-            if self.facing == "right":
-                screen.blit(self.idle_right, (self.x_pos,self.y_pos))
-            elif self.facing == "left":
-                screen.blit(self.idle_left, (self.x_pos,self.y_pos))
-            elif self.facing == "upwards":
-                screen.blit(self.idle_up, (self.x_pos,self.y_pos))
-            elif self.facing == "downwards":
-                screen.blit(self.idle_down, (self.x_pos,self.y_pos))
-            self.walk_count = 0
-        else:
-            if self.facing == "right":
-                screen.blit(self.walk_right[self.walk_count // 6], (self.x_pos,self.y_pos))
-                self.walk_count += 1
-            elif self.facing == "left":
-                screen.blit(self.walk_left[self.walk_count // 6], (self.x_pos,self.y_pos))
-                self.walk_count += 1
-            elif self.facing == "upwards":
-                screen.blit(self.walk_up[self.walk_count // 6], (self.x_pos,self.y_pos))
-                self.walk_count += 1
-            elif self.facing == "downwards":
-                screen.blit(self.walk_down[self.walk_count // 6], (self.x_pos,self.y_pos))
-                self.walk_count += 1
-        self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
-        pygame.draw.rect(screen, (0,255,0), self.hit_box,2)
-
-        pygame.draw.rect(screen, (255,128,240), (self.hit_box[0], self.hit_box[1] - 20, 80, 10))
-        pygame.draw.rect(screen, (128,255,210), (self.hit_box[0], self.hit_box[1] - 20, 80 - ((80/10) * (10 - self.mana)), 10))
-        pygame.draw.rect(screen, (255,0,0), (self.hit_box[0], self.hit_box[1] - 10, 80, 10))
-        pygame.draw.rect(screen, (0,255,0), (self.hit_box[0], self.hit_box[1] - 10, 80 - ((80/10)*(10- self.health)), 10))
-
-    def hit(self):
-        if self.health > 0:
-            self.health -= 1
-            self.walk_count = 0
-            pygame.display.update()
-        elif self.health == 0:
-            spell_shoot_sound.play()
 
     
 #making an player object i.e the magical wizard
@@ -149,25 +24,37 @@ class enemy():
         self.end = end  
         self.path = (self.x, self.end)
         self.walk_count = 0
-        self.vel = 3
+        self.vel = 1.5
         self.hit_box = (self.x + 20, self.y, 90,128)
         self.health = 10
         self.visible = True    
 
 
-        self.enemy_dir = os.path.join('src', 'assets', 'creatures')
-        self.ghost = pygame.transform.scale(
-            pygame.image.load(os.path.join(self.enemy_dir, 'enemy.png')),
-            (128,128)
-        )
+        self.enemy_dir = os.path.join('src', 'assets', 'creatures','Ghost')
+        master_sheet = pygame.image.load(os.path.join(self.enemy_dir, '128ghost.png')).convert_alpha()
+        frame_width = 256
+        frame_height = 256 
+
+        self.ghost_frames = []
+
+        for i in range(4):
+            frame_box = pygame.Rect(i * frame_width, 0, frame_width, frame_height)
+            sliced_frame = master_sheet.subsurface(frame_box)
+
+            final_sprite = pygame.transform.scale(sliced_frame, (128,128))
+            self.ghost_frames.append(final_sprite)
+
+        self.ghost = self.ghost_frames[0]
 
     def draw(self, screen):
         self.move()
         if self.visible:
-            if self.walk_count + 1 < 44:
+            if self.walk_count + 1 >= 24:
                 self.walk_count = 0
-            
-            screen.blit(self.ghost, (self.x, self.y))
+        
+            current_frame = self.ghost_frames[self.walk_count // 6]
+            screen.blit(current_frame, (self.x, self.y))
+
             self.walk_count += 1
             pygame.draw.rect(screen, (255,123,140), (self.hit_box[0], self.hit_box[1] - 20, 50, 10))
             pygame.draw.rect(screen, (128,255,200), (self.hit_box[0], self.hit_box[1] - 20, 50 - ((50/10) * (10 - self.health)), 10))
@@ -175,18 +62,16 @@ class enemy():
             self.hit_box = (self.x + 20, self.y, 90, 128)
             pygame.draw.rect(screen, (255,0,0), self.hit_box, 2)
     def move(self):
-        if self.vel > 0:
-            if self.x + self.vel < self.path[1]:
+        if self.visible:
+            if self.x < wizard.x_pos:
                 self.x += self.vel
-            else:
-                self.vel = self.vel * -1
-                self.walk_count = 0
-        else:
-            if self.x + self.vel > self.path[0]:
-                self.x += self.vel
-            else:
-                self.vel = self.vel * -1
-                self.walk_count = 0
+            elif self.x > wizard.x_pos:
+                self.x -= self.vel
+            
+            if self.y < wizard.y_pos:
+                self.y += self.vel
+            elif self.y > wizard.y_pos:
+                self.y -= self.vel
 
     def hit(self):
         if self.health > 0:
@@ -232,6 +117,7 @@ class revive():
 class spell_book():
 
     def __init__(self, x_pos, y_pos, pointer, cell, row):
+
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.pointer = pointer
@@ -264,10 +150,14 @@ def render_game():
     screen.blit(game_name,(70, 20))
     screen.blit(text, (670, 20))
     spooky.draw(screen)
-    spooky2.draw(screen)
     wizard.draw(screen)
     for spell in spells:
         spell.draw(screen)
+
+    pygame.draw.rect(screen, (255,0,0), (20, 360, 100, 30))
+    pygame.draw.rect(screen, (0,255,0), (wizard.hit_box[0], wizard.hit_box[1] - 10, 80 - ((80/10)*(10- wizard.health)), 10))
+    health = font.render(f"Health", 1, (0,0,0))
+    screen.blit(health,(40,360))
     pygame.display.update()
     clock.tick(30)
 
@@ -282,11 +172,13 @@ pygame.mixer.music.play(-1)
 
 font = pygame.font.SysFont('comicsans', 30, True)
 spooky = enemy(100,200,64,64,200)
-spell_limit = 2
+spell_limit = 5
 spells = []
 run = True
 shoot_loop = 0
-spooky2 = enemy(200,100,64,64,600)
+player_hit_cooldown = 0
+
+
 #Main loop
 while run:
 
@@ -295,6 +187,8 @@ while run:
     if shoot_loop > 3:
         shoot_loop = 0
 
+    if player_hit_cooldown > 0:
+        player_hit_cooldown -= 1
 
     #check for event
     for event in pygame.event.get():
@@ -302,28 +196,30 @@ while run:
             run = False
 
 
-    if wizard.hit_box[1] < spooky.hit_box[1] + spooky.hit_box[3] and wizard.hit_box[3] > spooky.hit_box[1]:
+    # Keeps your index style, but fixes the lower boundary check math
+    if wizard.hit_box[1] < spooky.hit_box[1] + spooky.hit_box[3] and wizard.hit_box[1] + wizard.hit_box[3] > spooky.hit_box[1]:
         if wizard.hit_box[0] + wizard.hit_box[2] > spooky.hit_box[0] and wizard.hit_box[0] < spooky.hit_box[0] + spooky.hit_box[2]:
-            spell_shoot_sound.play()
-            wizard.hit()
-            score -= 2
+            if spooky.visible:
+                if player_hit_cooldown == 0:  # Only hit if the ghost is alive
+                    spell_shoot_sound.play()
+                    wizard.hit()
+                    score -= 2
+                    player_hit_cooldown = 30
 
     # Safe array slice method [:] stops skipping logic loops when popping offscreen objects
+    # Added 'break' statements after your pops so it stops looking at deleted items
     for spell in spells:
-        if spell.y_pos < spooky.hit_box[1] + spooky.hit_box[3] and spell.y_pos > spooky.hit_box[1]:
+        if spooky.visible and spell.y_pos < spooky.hit_box[1] + spooky.hit_box[3] and spell.y_pos > spooky.hit_box[1]:
             if spell.x_pos > spooky.hit_box[0] and spell.x_pos < spooky.hit_box[0] + spooky.hit_box[2]:
-                spooky.hit()
-                wizard.mana -= 1
-                score += 1
-                spells.pop(spells.index(spell))
+                if spooky.visible:
+                    spooky.hit()
+                    wizard.mana -= 1
+                    score += 1
+                    spells.pop(spells.index(spell))
+                    break  # <--- Stops processing this spell instantly
 
-        if spell.y_pos < spooky2.hit_box[1] + spooky2.hit_box[3] and spell.y_pos > spooky2.hit_box[1]:
-            if spell.x_pos > spooky2.hit_box[0] and spell.x_pos < spooky2.hit_box[0] + spooky2.hit_box[2]:
-                spooky2.hit()
-                spells.pop(spells.index(spell))
                  
         if (spell.x_pos < 800 and spell.x_pos > 0) and (spell.y_pos < 400 and spell.y_pos > 0):
-        
             if spell.facing == "right":
                 spell.x_pos += spell.vel
             elif spell.facing == "left":
@@ -334,7 +230,7 @@ while run:
                 spell.y_pos += spell.vel
         else: 
             spells.pop(spells.index(spell))
-
+            break  # <--- Stops processing this spell instantly
     #check key presses for controls 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
@@ -362,7 +258,8 @@ while run:
             wizard.mana += 1
     
     if keys[pygame.K_SPACE] and shoot_loop == 0:
-        if len(spells) < spell_limit:
+        if wizard.mana > 0 and len(spells) < spell_limit:
+            wizard.mana -= 1
             spell_sound.play()
             spells.append(spells_shoot(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
         shoot_loop = 1
