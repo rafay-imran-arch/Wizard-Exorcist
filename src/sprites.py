@@ -2,9 +2,7 @@
 import pygame
 import os
 
-
-
-
+pygame.init()
 
 class player():
 
@@ -123,3 +121,160 @@ class player():
             self.walk_count = 0
             pygame.display.update()
        
+
+
+class enemy():
+    
+    def __init__(self,x, y, width, height, max_health, vel):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.health = max_health
+        self.max_health = max_health
+        self.vel = vel
+
+        #Some constants 
+        self.walk_count = 0
+        self.visible = True
+        self.hit_box = (self.x, self.y, self.width, self.height)
+
+        self.enemy_dir = os.path.join('src','assets', 'creatures')
+
+    def draw(self, screen, offset_y, bar_width):
+        if self.visible:
+            pygame.draw.rect(screen, (255,0,0), (self.hit_box[0], self.hit_box[1] - offset_y, bar_width, 8))
+            health_percentage = self.health / self.max_health
+            fill_width = int(bar_width * health_percentage)
+            pygame.draw.rect(screen, (128,255,200), (self.hit_box[0], self.hit_box[1]- offset_y, fill_width, 8))
+
+    def hit(self):
+        if self.health > 0:
+            self.health -= 1
+        else: 
+            self.visible = False
+
+
+class ghost(enemy):
+    def __init__(self, x, y, width, height):
+        super().__init__(x,y,width,height,max_health=10,vel=1.5)
+
+        #Asset loading of ghosts
+        ghost_dir = os.path.join(self.enemy_dir, 'Ghost')
+
+        master_sheet = pygame.image.load(os.path.join(ghost_dir, '128ghost.png')).convert_alpha()
+        self.ghost_frames = [pygame.transform.scale(
+            master_sheet.subsurface(pygame.Rect(i*256, 0, 256, 256)), 
+            (128, 128),
+            ) for i in range(4)
+        ]
+
+    def move(self, wizard, enemies):
+        if self.visible:
+            if self.x < wizard.x_pos:
+                self.x += self.vel
+            elif self.x >  wizard.x_pos:
+                self.x -= self.vel
+            if self.y < wizard.y_pos:
+                self.y += self.vel
+            elif self.y > wizard.y_pos:
+                self.y -= self.vel
+            
+
+        for other in enemies:
+            if other == self or not other.visible:
+                continue
+            distance_x = self.x - other.x
+            distance_y = self.y - other.y
+
+            if abs(distance_x) < 40 and abs(distance_y) < 40:
+                if distance_x > 0: self.x += 1
+                else: self.x -= 1
+                if distance_y > 0: self.y += 1
+                else: self.y -= 1
+
+    def draw(self, screen, wizard, offset_y, bar_width, enemies):
+        self.move(wizard, enemies)  
+        if self.visible:
+
+            frame_index = (self.walk_count // 6) % len(self.ghost_frames)
+            current_frame = self.ghost_frames[frame_index]
+            self.walk_count += 1
+            screen.blit(current_frame, (self.x, self.y))
+
+
+            pad_x = 24
+            pad_y = 25
+            hit_x = self.x + pad_x
+            hit_y = self.y + pad_y
+            hit_w = self.width - (2 * pad_x)
+            hit_h = self.height - (2 * pad_y)
+            self.hit_box = (hit_x, hit_y, hit_w, hit_h)
+            pygame.draw.rect(screen, (255, 0, 0), self.hit_box, 2)
+
+            super().draw(screen, offset_y, bar_width)
+
+
+
+class bat(enemy):
+
+    def __init__(self, x, y, width, height):
+        super().__init__(x,y,width,height,max_health=5,vel=2.5)
+
+        #bat assets
+        self.bat_dir = os.path.join(self.enemy_dir, "Bat")
+
+        master_sheet = pygame.image.load(os.path.join(self.bat_dir, '96bat.png'))
+        self.bat_frames = [pygame.transform.scale(
+            master_sheet.subsurface(pygame.Rect(i*192, 0, 192, 192)),
+            (128,128)
+        ) for i in range(4)
+        ]
+
+    def move(self, wizard, enemies):
+        if self.visible:
+            if self.x < wizard.x_pos:
+                self.x += self.vel
+            elif self.x > wizard.x_pos:
+                self.x -= self.vel
+
+            if self.y < wizard.y_pos:
+                self.y += self.vel
+            elif self.y > wizard.y_pos:
+                self.y -= self.vel 
+
+        for other in enemies:
+            if other == self or not other.visible:
+                continue
+
+            distance_x = self.x - other.x
+            distance_y = self.y - other.y
+
+            if abs(distance_x) < 40 and abs(distance_y) < 40:
+                if distance_x > 0: self.x += 1
+                else: self.x -= 1
+                if distance_y > 0: self.y += 1
+                else: self.y -= 1
+
+
+    
+    def draw(self, screen, wizard, offset_y, bar_width, enemies):
+        self.move(wizard, enemies)
+        if self.visible:
+
+            frame_index = (self.walk_count // 6) % len(self.bat_frames)
+            current_frame = self.bat_frames[frame_index]
+            self.walk_count += 1
+            screen.blit(current_frame, (self.x,self.y))
+
+            pad_x = 24
+            pad_y = 25
+            hit_x = self.x + pad_x
+            hit_y = self.y + pad_y
+            hit_w = self.width - (2 * pad_x)
+            hit_h = self.height - (2 * pad_y)
+            self.hit_box = (hit_x, hit_y, hit_w, hit_h)
+            pygame.draw.rect(screen, (255, 0, 0), self.hit_box, 2)
+
+
+            super().draw(screen, offset_y, bar_width)
