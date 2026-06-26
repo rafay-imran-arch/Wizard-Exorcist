@@ -1,6 +1,8 @@
 import pygame
 import os 
-from sprites import player
+from sprites import player, enemy, ghost, bat
+from spells import spells, projectile_spell 
+
 pygame.init()
 
 # Some essentials
@@ -12,73 +14,6 @@ score = 0
     
 #making an player object i.e the magical wizard
 wizard = player(400,200,64,64)
-wizard2 = player(300,100,64,64)
-
-class enemy():
-
-    def __init__(self, x, y, width, height, end):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.end = end  
-        self.path = (self.x, self.end)
-        self.walk_count = 0
-        self.vel = 1.5
-        self.hit_box = (self.x + 20, self.y, 90,128)
-        self.health = 10
-        self.visible = True    
-
-
-        self.enemy_dir = os.path.join('src', 'assets', 'creatures','Ghost')
-        master_sheet = pygame.image.load(os.path.join(self.enemy_dir, '128ghost.png')).convert_alpha()
-        frame_width = 256
-        frame_height = 256 
-
-        self.ghost_frames = []
-
-        for i in range(4):
-            frame_box = pygame.Rect(i * frame_width, 0, frame_width, frame_height)
-            sliced_frame = master_sheet.subsurface(frame_box)
-
-            final_sprite = pygame.transform.scale(sliced_frame, (128,128))
-            self.ghost_frames.append(final_sprite)
-
-        self.ghost = self.ghost_frames[0]
-
-    def draw(self, screen):
-        self.move()
-        if self.visible:
-            if self.walk_count + 1 >= 24:
-                self.walk_count = 0
-        
-            current_frame = self.ghost_frames[self.walk_count // 6]
-            screen.blit(current_frame, (self.x, self.y))
-
-            self.walk_count += 1
-            pygame.draw.rect(screen, (255,123,140), (self.hit_box[0], self.hit_box[1] - 20, 50, 10))
-            pygame.draw.rect(screen, (128,255,200), (self.hit_box[0], self.hit_box[1] - 20, 50 - ((50/10) * (10 - self.health)), 10))
-
-            self.hit_box = (self.x + 20, self.y, 90, 128)
-            pygame.draw.rect(screen, (255,0,0), self.hit_box, 2)
-    def move(self):
-        if self.visible:
-            if self.x < wizard.x_pos:
-                self.x += self.vel
-            elif self.x > wizard.x_pos:
-                self.x -= self.vel
-            
-            if self.y < wizard.y_pos:
-                self.y += self.vel
-            elif self.y > wizard.y_pos:
-                self.y -= self.vel
-
-    def hit(self):
-        if self.health > 0:
-            self.health -= 1
-        else:
-            self.visible = False
-
 
 class spells_shoot():
     
@@ -149,7 +84,8 @@ def render_game():
     game_name = font.render(f"Weclome to Wizard Excorcist: Redemption of the fallen castle", 1, (128,100,255))
     screen.blit(game_name,(70, 20))
     screen.blit(text, (670, 20))
-    spooky.draw(screen)
+    for enemy in enemies:
+        enemy.draw(screen,wizard, offset_y=20, bar_width=50, enemies=enemies)
     wizard.draw(screen)
     for spell in spells:
         spell.draw(screen)
@@ -171,13 +107,18 @@ game_music = pygame.mixer.music.load(os.path.join(sound_dir, "bg.mp3"))
 pygame.mixer.music.play(-1)
 
 font = pygame.font.SysFont('comicsans', 30, True)
-spooky = enemy(100,200,64,64,200)
+enemy = ghost(100,200,64,64)
 spell_limit = 5
 spells = []
 run = True
 shoot_loop = 0
 player_hit_cooldown = 0
 
+enemies = [
+    ghost(300,20, 128, 110),
+    ghost(200,80, 128, 110),
+    bat(500, 50, 128, 128)
+]
 
 #Main loop
 while run:
@@ -195,42 +136,43 @@ while run:
         if event.type == pygame.QUIT:
             run = False
 
-
-    # Keeps your index style, but fixes the lower boundary check math
-    if wizard.hit_box[1] < spooky.hit_box[1] + spooky.hit_box[3] and wizard.hit_box[1] + wizard.hit_box[3] > spooky.hit_box[1]:
-        if wizard.hit_box[0] + wizard.hit_box[2] > spooky.hit_box[0] and wizard.hit_box[0] < spooky.hit_box[0] + spooky.hit_box[2]:
-            if spooky.visible:
-                if player_hit_cooldown == 0:  # Only hit if the ghost is alive
-                    spell_shoot_sound.play()
-                    wizard.hit()
-                    score -= 2
-                    player_hit_cooldown = 30
+    for enemy in enemies:
+        # Keeps your index style, but fixes the lower boundary check math
+        if wizard.hit_box[1] < enemy.hit_box[1] + enemy.hit_box[3] and wizard.hit_box[1] + wizard.hit_box[3] > enemy.hit_box[1]:
+            if wizard.hit_box[0] + wizard.hit_box[2] > enemy.hit_box[0] and wizard.hit_box[0] < enemy.hit_box[0] + enemy.hit_box[2]:
+                if enemy.visible:
+                    if player_hit_cooldown == 0:  # Only hit if the ghost is alive
+                        spell_shoot_sound.play()
+                        wizard.hit()
+                        score -= 2
+                        player_hit_cooldown = 30
 
     # Safe array slice method [:] stops skipping logic loops when popping offscreen objects
     # Added 'break' statements after your pops so it stops looking at deleted items
-    for spell in spells:
-        if spooky.visible and spell.y_pos < spooky.hit_box[1] + spooky.hit_box[3] and spell.y_pos > spooky.hit_box[1]:
-            if spell.x_pos > spooky.hit_box[0] and spell.x_pos < spooky.hit_box[0] + spooky.hit_box[2]:
-                if spooky.visible:
-                    spooky.hit()
-                    wizard.mana -= 1
-                    score += 1
-                    spells.pop(spells.index(spell))
-                    break  # <--- Stops processing this spell instantly
+    for enemy in enemies:
+        for spell in spells:
+            if enemy.visible and spell.y_pos < enemy.hit_box[1] + enemy.hit_box[3] and spell.y_pos > enemy.hit_box[1]:
+                if spell.x_pos > enemy.hit_box[0] and spell.x_pos < enemy.hit_box[0] + enemy.hit_box[2]:
+                    if enemy.visible:
+                        enemy.hit()
+                        wizard.mana -= 1
+                        score += 1
+                        spells.pop(spells.index(spell))
+                        break  # <--- Stops processing this spell instantly
 
                  
-        if (spell.x_pos < 800 and spell.x_pos > 0) and (spell.y_pos < 400 and spell.y_pos > 0):
-            if spell.facing == "right":
-                spell.x_pos += spell.vel
-            elif spell.facing == "left":
-                spell.x_pos -= spell.vel
-            elif spell.facing == "upwards":
-                spell.y_pos -= spell.vel
-            elif spell.facing == 'downwards':
-                spell.y_pos += spell.vel
-        else: 
-            spells.pop(spells.index(spell))
-            break  # <--- Stops processing this spell instantly
+            if (spell.x_pos < 800 and spell.x_pos > 0) and (spell.y_pos < 400 and spell.y_pos > 0):
+                if spell.facing == "right":
+                    spell.x_pos += spell.vel
+                elif spell.facing == "left":
+                    spell.x_pos -= spell.vel
+                elif spell.facing == "upwards":
+                    spell.y_pos -= spell.vel
+                elif spell.facing == 'downwards':
+                    spell.y_pos += spell.vel
+            else: 
+                spells.pop(spells.index(spell))
+                break  # <--- Stops processing this spell instantly
     #check key presses for controls 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
@@ -261,7 +203,7 @@ while run:
         if wizard.mana > 0 and len(spells) < spell_limit:
             wizard.mana -= 1
             spell_sound.play()
-            spells.append(spells_shoot(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
+            spells.append(projectile_spell(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
         shoot_loop = 1
     render_game()
 
