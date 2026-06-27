@@ -25,7 +25,7 @@ class enemy():
         self.I = "hello i am the steak of world "
         self.dimension = "hello we belong to the phantom dimension and We are here to spook you, we broke into your dimension when the " \
         "barries between your and mine diemnsion collided resulting i s a rift. And through this rift we got into your wold and then the rest is history " \
-        "we are going to conqwuere this world also that'll make our wolrd more tringer so that we can create arift in other dimension too." \
+        "we are going to conqwuere this world also that'll make our wolrd more stronger so that we can create arift in other dimension too." \
         "and neither will they survive......." \
         "we plan to take over the whole of multi-versal dimensions and will leave no place our darkness will spread through out and be known to" \
         "every species to come and we'll make sure we aree the dominant ones"
@@ -36,6 +36,15 @@ class enemy():
         "You guys think we dont knkow you but rather we ave been taught in early school about who you guys are how to acasue darkness but most importantly" \
         "what weakness you guys have its like we know all your hitpoints we know what kills you, we know what hurts you and we know how to torture you!" \
         "Yes we will torture you ...."
+        self.info_text = "Display this text for the cut scene, Work on how to establish hui cut scene" \
+        "then possibly add Audio in that not clear but normal cut scene audios" \
+        "In addition to that I can add the player responce with using simple if elif and else statements combines with pygame.text outputs " \
+        "what can I add next other than that " \
+        "possibly add an flashback to the history of that o something then " \
+        "we can focus on the development of wizard how he got th epower" \
+        "I am thinking of adding a spell book to choose spells but i think I'll leave that for version 2 " \
+        "right now i just want to focus on the basics" 
+        
 
 
 

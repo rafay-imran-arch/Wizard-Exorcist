@@ -1,6 +1,6 @@
 import pygame
 import os 
-from sprites import player, enemy, ghost, bat
+from sprites import player, enemy, ghost, bat, slime
 from spells import spells, projectile_spell 
 
 pygame.init()
@@ -107,7 +107,6 @@ game_music = pygame.mixer.music.load(os.path.join(sound_dir, "bg.mp3"))
 pygame.mixer.music.play(-1)
 
 font = pygame.font.SysFont('comicsans', 30, True)
-enemy = ghost(100,200,64,64)
 spell_limit = 5
 spells = []
 run = True
@@ -116,7 +115,7 @@ player_hit_cooldown = 0
 
 enemies = [
     ghost(300,20, 128, 110),
-    ghost(200,80, 128, 110),
+    slime(200,80, 128, 130),
     bat(500, 50, 128, 128)
 ]
 
@@ -135,32 +134,8 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-
-    for enemy in enemies:
-        # Keeps your index style, but fixes the lower boundary check math
-        if wizard.hit_box[1] < enemy.hit_box[1] + enemy.hit_box[3] and wizard.hit_box[1] + wizard.hit_box[3] > enemy.hit_box[1]:
-            if wizard.hit_box[0] + wizard.hit_box[2] > enemy.hit_box[0] and wizard.hit_box[0] < enemy.hit_box[0] + enemy.hit_box[2]:
-                if enemy.visible:
-                    if player_hit_cooldown == 0:  # Only hit if the ghost is alive
-                        spell_shoot_sound.play()
-                        wizard.hit()
-                        score -= 2
-                        player_hit_cooldown = 30
-
-    # Safe array slice method [:] stops skipping logic loops when popping offscreen objects
-    # Added 'break' statements after your pops so it stops looking at deleted items
-    for enemy in enemies:
-        for spell in spells:
-            if enemy.visible and spell.y_pos < enemy.hit_box[1] + enemy.hit_box[3] and spell.y_pos > enemy.hit_box[1]:
-                if spell.x_pos > enemy.hit_box[0] and spell.x_pos < enemy.hit_box[0] + enemy.hit_box[2]:
-                    if enemy.visible:
-                        enemy.hit()
-                        wizard.mana -= 1
-                        score += 1
-                        spells.pop(spells.index(spell))
-                        break  # <--- Stops processing this spell instantly
-
-                 
+        
+    for spell in spells[:]:        
             if (spell.x_pos < 800 and spell.x_pos > 0) and (spell.y_pos < 400 and spell.y_pos > 0):
                 if spell.facing == "right":
                     spell.x_pos += spell.vel
@@ -173,6 +148,36 @@ while run:
             else: 
                 spells.pop(spells.index(spell))
                 break  # <--- Stops processing this spell instantly
+    wizard_rect = pygame.Rect(wizard.hit_box[0], wizard.hit_box[1], wizard.hit_box[2], wizard.hit_box[3])   
+    for enemy in enemies[:]:
+        if not enemy.visible:
+            enemies.remove(enemy)
+            continue
+        enemy_rect = pygame.Rect(enemy.hit_box[0], enemy.hit_box[1], enemy.hit_box[2], enemy.hit_box[3])
+        
+        if enemy_rect.colliderect(wizard_rect):
+            if player_hit_cooldown == 0:
+                spell_shoot_sound.play()
+                wizard.hit()
+                score -= 2
+                player_hit_cooldown = 30
+        if enemy.visible:
+            for spell in spells[:]:
+                    spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
+
+                    if enemy_rect.colliderect(spell_rect):
+                        enemy.hit()
+                        score += 1
+
+                        if spell in spells:
+                            spells.remove(spell)
+
+                        if not enemy.visible:
+                            if enemy in enemies:
+                                enemies.remove(enemy)
+                        break
+
+        
     #check key presses for controls 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
@@ -198,13 +203,15 @@ while run:
         recharge_sound.play()
         if wizard.mana < 10:
             wizard.mana += 1
+    else:
+        recharge_sound.stop()
     
     if keys[pygame.K_SPACE] and shoot_loop == 0:
         if wizard.mana > 0 and len(spells) < spell_limit:
             wizard.mana -= 1
             spell_sound.play()
             spells.append(projectile_spell(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
-        shoot_loop = 1
+        shoot_loop = 1  
     render_game()
 
 pygame.quit()
