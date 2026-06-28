@@ -1,7 +1,7 @@
 import pygame
 import os 
-from sprites import player, enemy, ghost, bat, slime
-from spells import spells, projectile_spell 
+from sprites import player, enemy, ghost, bat, slime, pumpkin
+from spells import spells, projectile_spell, repel_spell
 
 pygame.init()
 
@@ -109,6 +109,7 @@ pygame.mixer.music.play(-1)
 font = pygame.font.SysFont('comicsans', 30, True)
 spell_limit = 5
 spells = []
+repel_spells = []
 run = True
 shoot_loop = 0
 player_hit_cooldown = 0
@@ -116,7 +117,8 @@ player_hit_cooldown = 0
 enemies = [
     ghost(300,20, 128, 110),
     slime(200,80, 128, 130),
-    bat(500, 50, 128, 128)
+    bat(500, 50, 128, 128),
+    pumpkin(700,100, 128, 160)
 ]
 
 #Main loop
@@ -178,6 +180,11 @@ while run:
                         break
 
         
+    for spell in repel_spells[:]:
+        spell.update(enemies)
+        spell.draw
+        if not spell.active:
+            repel_spells.remove(spell)
     #check key presses for controls 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
@@ -206,6 +213,16 @@ while run:
     else:
         recharge_sound.stop()
     
+    if keys[pygame.K_f]:
+        if len(repel_spells) == 0 and wizard.mana >=3:
+            wizard.mana -= 3
+
+            center_x = wizard.x_pos + wizard.character_size[0] // 2
+            center_y = wizard.y_pos + wizard.character_size[1] // 2
+
+            new_repel = repel_spell(center_x, center_y, wizard.facing)
+            repel_spells.append(new_repel)
+
     if keys[pygame.K_SPACE] and shoot_loop == 0:
         if wizard.mana > 0 and len(spells) < spell_limit:
             wizard.mana -= 1
@@ -214,6 +231,7 @@ while run:
         shoot_loop = 1  
     render_game()
 
+    
 pygame.quit()
 
 

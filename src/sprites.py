@@ -349,3 +349,68 @@ class slime(enemy):
             pygame.draw.rect(screen, (255, 0, 0), self.hit_box, 2)
 
             super().draw(screen, offset_y, bar_width)
+
+
+class pumpkin(enemy):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height, max_health=25, vel=1.8)
+
+        pumpkin_dir = os.path.join(self.enemy_dir, 'Pumpkin')
+
+        master_sheet = pygame.image.load(os.path.join(pumpkin_dir, 'Pumpkin-160x160.png'))
+
+        total_width = master_sheet.get_width()
+        frame_width = total_width // 6
+        frame_height = master_sheet.get_height()
+
+        self.pumpkin_frames = [pygame.transform.scale(
+            master_sheet.subsurface(pygame.Rect(i*frame_width,0,frame_width,frame_height)),
+            (128,128)
+        ) for i in range(6)
+        ]
+
+    def move(self, wizard, enemies):
+        if self.visible: 
+            if self.x < wizard.x_pos:
+                self.x += self.vel
+            elif self.x > wizard.x_pos:
+                self.x -= self.vel
+            if self.y < wizard.y_pos:
+                self.y += self.vel
+            elif self.y > wizard.y_pos:
+                self.y -= self.vel
+
+        for other in enemies: 
+            if other == self or not other.visible:
+                continue
+            
+            distance_x = self.x - other.x
+            distance_y = self.x - other.y
+
+            if abs(distance_x) < 40 and abs(distance_y) < 40:
+                if distance_x > 0: self.x += 1
+                else: self.x -= 1
+                if distance_y > 0: self.y += 1
+                else: self.y -= 1
+            
+    def draw(self, screen, wizard, offset_y, bar_width, enemies):
+        self.move(wizard, enemies)
+
+        if self.visible:
+
+            frame_index = (self.walk_count // 3) % len(self.pumpkin_frames)
+            current_frame = self.pumpkin_frames[frame_index]
+            self.walk_count += 1
+            screen.blit(current_frame, (self.x, self.y))
+
+            pad_x = 24
+            pad_y = 25
+            hit_x = self.x + pad_x
+            hit_y = self.y + pad_y
+            hit_w = self.width - (2 * pad_x)
+            hit_h = self.height - (2 * pad_y)
+            self.hit_box = (hit_x, hit_y, hit_w, hit_h)
+            pygame.draw.rect(screen, (255, 0, 0), self.hit_box, 2)
+
+
+            super().draw(screen, offset_y, bar_width)
