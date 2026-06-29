@@ -5,8 +5,11 @@ from spells import spells, projectile_spell, repel_spell
 
 pygame.init()
 
+
+screen_width = 800
+screen_height = 800 
 # Some essentials
-screen = pygame.display.set_mode((800,400))
+screen = pygame.display.set_mode((screen_width,screen_height))
 pygame.display.set_caption("First Draft WE")
 clock = pygame.time.Clock()
 score = 0
@@ -90,6 +93,10 @@ def render_game():
     for spell in spells:
         spell.draw(screen)
 
+    for spell in repel_spells[:]:
+        spell.draw(screen)
+
+
     pygame.draw.rect(screen, (255,0,0), (20, 360, 100, 30))
     pygame.draw.rect(screen, (0,255,0), (wizard.hit_box[0], wizard.hit_box[1] - 10, 80 - ((80/10)*(10- wizard.health)), 10))
     health = font.render(f"Health", 1, (0,0,0))
@@ -151,12 +158,27 @@ while run:
                 spells.pop(spells.index(spell))
                 break  # <--- Stops processing this spell instantly
     wizard_rect = pygame.Rect(wizard.hit_box[0], wizard.hit_box[1], wizard.hit_box[2], wizard.hit_box[3])   
-    for enemy in enemies[:]:
-        if not enemy.visible:
-            enemies.remove(enemy)
-            continue
+
+    for enemy in enemies:
+        if enemy.x < 0:
+            enemy.x = 0
+        elif enemy.x > screen_width - enemy.hit_box[2]:
+            enemy.x = screen_width - enemy.hit_box[2]
+
+        if enemy.y < 0:
+            enemy.y = 0 
+        elif enemy.y > screen_height - enemy.hit_box[3]:
+            enemy.y = screen_height - enemy.hit_box[3]
+
+        enemy.hit_box = (enemy.x, enemy.y, enemy.hit_box[2], enemy.hit_box[3])
+
         enemy_rect = pygame.Rect(enemy.hit_box[0], enemy.hit_box[1], enemy.hit_box[2], enemy.hit_box[3])
         
+        if enemy_rect.colliderect(wizard_rect):
+            if player_hit_cooldown == 0:
+                spell_shoot_sound.play()
+                wizard.hit()
+                score -= 2
         if enemy_rect.colliderect(wizard_rect):
             if player_hit_cooldown == 0:
                 spell_shoot_sound.play()
@@ -182,27 +204,35 @@ while run:
         
     for spell in repel_spells[:]:
         spell.update(enemies)
-        spell.draw
-        if not spell.active:
+        if not spell.active: 
             repel_spells.remove(spell)
+            
+    enemies = [e for e in enemies if e.visible]
     #check key presses for controls 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
-        wizard.x_pos -= wizard.vel
         wizard.facing = "left"
         wizard.is_moving = True
+        if wizard.x_pos > 0:
+            wizard.x_pos -= wizard.vel
+    
     elif keys[pygame.K_RIGHT]:
-        wizard.x_pos += wizard.vel
         wizard.facing = "right"
         wizard.is_moving = True
+        if wizard.x_pos < screen_width - wizard.character_size[0]:
+            wizard.x_pos += wizard.vel
+
     elif keys[pygame.K_UP]:
-        wizard.y_pos -= wizard.vel
         wizard.facing = "upwards"
-        wizard.is_moving = True
+        wizard.is_moving = True 
+        if wizard.y_pos > 0:
+            wizard.y_pos -= wizard.vel
+
     elif keys[pygame.K_DOWN]:
-        wizard.y_pos += wizard.vel
         wizard.facing = "downwards"
         wizard.is_moving = True
+        if wizard.y_pos< screen_height - wizard.character_size[1]:
+            wizard.y_pos += wizard.vel
     else:
         wizard.is_moving = False
     

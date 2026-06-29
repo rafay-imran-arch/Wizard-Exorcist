@@ -13,6 +13,7 @@ class spells():
 
         #loading spell assets dir 
         self.spell_dir = os.path.join('src', 'assets','spells')
+        self.effect_dir = os.path.join('src', 'assets', 'effects', 'eff', 'PNG')
         
 
 class projectile_spell(spells):
@@ -34,10 +35,18 @@ class repel_spell(spells):
         super().__init__(x_pos, y_pos, facing)
 
         self.radius = 10
-        self.max_radius = 80
-        self.growth_speed = 20
-        self.push_force = 12
+        self.max_radius = 130
+        self.growth_speed = 15
+        self.push_force = 20
         self.active = True
+        self.walk_count = 0
+
+        self.repel_dir = os.path.join(self.effect_dir, 'Explosions', 'repel_spell', 'small')
+
+        self.repel_frames = [
+            pygame.image.load(os.path.join(self.repel_dir, f"frame{i:04}.png")).convert_alpha()
+            for i in range(10)
+        ]
 
     def update(self, enemies):
 
@@ -69,10 +78,11 @@ class repel_spell(spells):
     def draw(self, screen):
         if self.active:
 
+            frame_index = (self.walk_count // 1) % len(self.repel_frames)
+            current_frame = self.repel_frames[frame_index]
+            self.walk_count += 1
+
             diameter = int(self.radius * 2)
-            surface_layer = pygame.Surface((diameter, diameter), pygame.SRCAPLHA)
+            scaled_frame = pygame.transform.scale(current_frame, (diameter,diameter))
 
-            center_on_layer = (int(self.radius), int(self.radius))
-            pygame.draw.circle(surface_layer, (0,191, 255, 128), center_on_layer, int(self.radius))
-
-            screen.blit(surface_layer, (int(self.x_pos - self.radius), int(self.y_pos - self.radius)))
+            screen.blit(scaled_frame, (int(self.x_pos - self.radius), int(self.y_pos - self.radius)))
