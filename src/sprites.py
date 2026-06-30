@@ -1,6 +1,7 @@
 # script for my sprites 
 import pygame
 import os
+import random
 
 pygame.init()
 
@@ -414,3 +415,32 @@ class pumpkin(enemy):
 
 
             super().draw(screen, offset_y, bar_width)
+
+
+class keys_drop():
+    def __init__(self):
+        random_x =  random.randint(50,700)
+        random_y = random.randint(50,700)
+        self.rect = pygame.Rect(random_x, random_y, 16, 16)
+        self.visible = False
+        self.collected = False
+        self.text_timer = 0
+
+        self.current_frame = 0
+        self.animated_speed = 0.2
+        self.key_dir = os.path.join('src', 'assets', 'keys', 'Key 4', 'SILVER')
+        self.key_frames = [ pygame.transform.scale_by(
+            pygame.image.load(os.path.join(self.key_dir, f'Key 4 - SILVER - {i:04d}.png')).convert_alpha(),
+            2
+        ) for i in range(4)
+        ]
+    
+    def draw(self, screen):
+        if self.visible and not self.collected:
+            
+            self.current_frame += self.animated_speed
+            if self.current_frame >= len(self.key_frames):
+                self.current_frame = 0 
+
+            active_sprite = self.key_frames[int(self.current_frame)]
+            screen.blit(active_sprite, (self.rect.x, self.rect.y))

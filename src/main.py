@@ -1,6 +1,6 @@
 import pygame
 import os 
-from sprites import player, enemy, ghost, bat, slime, pumpkin
+from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop
 from spells import spells, projectile_spell, repel_spell
 
 pygame.init()
@@ -87,15 +87,20 @@ def render_game():
     game_name = font.render(f"Weclome to Wizard Excorcist: Redemption of the fallen castle", 1, (128,100,255))
     screen.blit(game_name,(70, 20))
     screen.blit(text, (670, 20))
-    for enemy in enemies:
-        enemy.draw(screen,wizard, offset_y=20, bar_width=50, enemies=enemies)
+    for e in enemies:
+        e.draw(screen,wizard, offset_y=20, bar_width=50, enemies=enemies)
     wizard.draw(screen)
+    room_key.draw(screen)
     for spell in spells:
         spell.draw(screen)
 
     for spell in repel_spells[:]:
         spell.draw(screen)
-
+    
+    if room_key.collected and room_key.text_timer > 0:
+        clear_level_1 = font.render("Level 1 Cleared", True, (0,255,128))
+        screen.blit(clear_level_1, (400,400))
+        room_key.text_timer -= 1
 
     pygame.draw.rect(screen, (255,0,0), (20, 360, 100, 30))
     pygame.draw.rect(screen, (0,255,0), (wizard.hit_box[0], wizard.hit_box[1] - 10, 80 - ((80/10)*(10- wizard.health)), 10))
@@ -117,6 +122,7 @@ font = pygame.font.SysFont('comicsans', 30, True)
 spell_limit = 5
 spells = []
 repel_spells = []
+room_key = keys_drop()
 run = True
 shoot_loop = 0
 player_hit_cooldown = 0
@@ -145,7 +151,7 @@ while run:
             run = False
         
     for spell in spells[:]:        
-            if (spell.x_pos < 800 and spell.x_pos > 0) and (spell.y_pos < 400 and spell.y_pos > 0):
+            if (spell.x_pos < screen_width and spell.x_pos > 0) and (spell.y_pos < screen_height and spell.y_pos > 0):
                 if spell.facing == "right":
                     spell.x_pos += spell.vel
                 elif spell.facing == "left":
@@ -179,11 +185,6 @@ while run:
                 spell_shoot_sound.play()
                 wizard.hit()
                 score -= 2
-        if enemy_rect.colliderect(wizard_rect):
-            if player_hit_cooldown == 0:
-                spell_shoot_sound.play()
-                wizard.hit()
-                score -= 2
                 player_hit_cooldown = 30
         if enemy.visible:
             for spell in spells[:]:
@@ -208,6 +209,18 @@ while run:
             repel_spells.remove(spell)
             
     enemies = [e for e in enemies if e.visible]
+    if len(enemies) == 0:
+        room_key.visible = True 
+
+    if room_key.visible and not room_key.collected:
+        if  wizard_rect.colliderect(room_key.rect):
+            score += 10
+            spell_shoot_sound.play()
+            room_key.visible = False
+            room_key.collected = True
+            room_key.text_timer = 150
+
+            
     #check key presses for controls 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:

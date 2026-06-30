@@ -35,20 +35,20 @@ class repel_spell(spells):
         super().__init__(x_pos, y_pos, facing)
 
         self.radius = 10
-        self.max_radius = 130
+        self.max_radius = 150
         self.growth_speed = 15
-        self.push_force = 20
+        self.push_force = 60
         self.active = True
         self.walk_count = 0
 
-        self.repel_dir = os.path.join(self.effect_dir, 'Explosions', 'repel_spell', 'small')
-
+        self.repel_dir = os.path.join(self.effect_dir, 'Impacts', 'symmetrical_impact_002', 'symmetrical_impact_002_small_blue')
         self.repel_frames = [
             pygame.image.load(os.path.join(self.repel_dir, f"frame{i:04}.png")).convert_alpha()
             for i in range(10)
         ]
 
     def update(self, enemies):
+        import math
 
         self.radius += self.growth_speed
         if self.radius >= self.max_radius:
@@ -63,17 +63,19 @@ class repel_spell(spells):
 
             dx = enemy_center_x - self.x_pos
             dy = enemy_center_y - self.y_pos 
-            distance = (dx**2 + dy**2) ** 0.5
+            distance = math.hypot(dx, dy)
 
-            if distance < self.radius:
-                if distance == 0:
-                    distance = 1
+            repel_range = 150
 
-            push_y = dx/ distance
-            push_x = dy/ distance
+            if distance < repel_range and distance > 0:
+            
+                push_y = dx/ distance
+                push_x = dy/ distance
 
-            enemy.x += push_x * self.push_force
-            enemy.y += push_y * self.push_force 
+                
+
+                enemy.x += push_x * self.push_force
+                enemy.y += push_y * self.push_force 
 
     def draw(self, screen):
         if self.active:
