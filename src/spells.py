@@ -88,3 +88,4 @@ class repel_spell(spells):
             scaled_frame = pygame.transform.scale(current_frame, (diameter,diameter))
 
             screen.blit(scaled_frame, (int(self.x_pos - self.radius), int(self.y_pos - self.radius)))
+

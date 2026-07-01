@@ -2,6 +2,7 @@ import pygame
 import os 
 from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop
 from spells import spells, projectile_spell, repel_spell
+from dungeon import build_dungeon
 
 pygame.init()
 
@@ -97,10 +98,9 @@ def render_game():
     for spell in repel_spells[:]:
         spell.draw(screen)
     
-    if room_key.collected and room_key.text_timer > 0:
+    if room_key.collected and room_key.text_timer >0:
         clear_level_1 = font.render("Level 1 Cleared", True, (0,255,128))
         screen.blit(clear_level_1, (400,400))
-        room_key.text_timer -= 1
 
     pygame.draw.rect(screen, (255,0,0), (20, 360, 100, 30))
     pygame.draw.rect(screen, (0,255,0), (wizard.hit_box[0], wizard.hit_box[1] - 10, 80 - ((80/10)*(10- wizard.health)), 10))
@@ -127,13 +127,13 @@ run = True
 shoot_loop = 0
 player_hit_cooldown = 0
 
-enemies = [
-    ghost(300,20, 128, 110),
-    slime(200,80, 128, 130),
-    bat(500, 50, 128, 128),
-    pumpkin(700,100, 128, 160)
-]
 
+
+dungeon = build_dungeon()
+current_room_key = 'spawn room'
+current_room = dungeon[current_room_key]
+
+enemies = current_room.enemies
 #Main loop
 while run:
 
@@ -144,6 +144,9 @@ while run:
 
     if player_hit_cooldown > 0:
         player_hit_cooldown -= 1
+
+    if room_key.collected and room_key.text_timer > 0:
+        room_key.text_timer -= 1
 
     #check for event
     for event in pygame.event.get():
@@ -163,7 +166,7 @@ while run:
             else: 
                 spells.pop(spells.index(spell))
                 break  # <--- Stops processing this spell instantly
-    wizard_rect = pygame.Rect(wizard.hit_box[0], wizard.hit_box[1], wizard.hit_box[2], wizard.hit_box[3])   
+    wizard_rect = pygame.Rect(wizard.x_pos + 10, wizard.y_pos, 100, 128)
 
     for enemy in enemies:
         if enemy.x < 0:
@@ -209,8 +212,36 @@ while run:
             repel_spells.remove(spell)
             
     enemies = [e for e in enemies if e.visible]
-    if len(enemies) == 0:
+    if len(enemies) == 0 and not current_room.cleared:
+        current_room.cleared = True
         room_key.visible = True 
+    
+    next_room_key = None
+
+    if current_room.cleared:
+
+        if wizard.x_pos > 740 and 'east' in current_room.connections:
+            next_room_key = current_room.connections['east']
+            wizard.x_pos = 50
+        elif wizard.x_pos < 10 and 'west' in current_room.connections:
+            next_room_key = current_room.connections['west']
+            wizard.x_pos = 690
+
+        elif wizard.y_pos < 40 and 'north' in current_room.connections:
+            next_room_key = current_room.connections['north']
+            wizard.y_pos = 690
+        elif wizard.y_pos > 730 and 'south' in current_room.connections:
+            next_room_key = current_room.connections['south']
+            wizard.y_pos = 100  
+
+    if next_room_key:
+        current_room_key = next_room_key
+        current_room = dungeon[current_room_key]
+        enemies = current_room.enemies
+
+        if not current_room.cleared:
+            room_key.visible = False
+            room_key.collected = False
 
     if room_key.visible and not room_key.collected:
         if  wizard_rect.colliderect(room_key.rect):
@@ -232,7 +263,7 @@ while run:
     elif keys[pygame.K_RIGHT]:
         wizard.facing = "right"
         wizard.is_moving = True
-        if wizard.x_pos < screen_width - wizard.character_size[0]:
+        if wizard.x_pos < screen_width - wizard.character_size[0]+ 20:
             wizard.x_pos += wizard.vel
 
     elif keys[pygame.K_UP]:
