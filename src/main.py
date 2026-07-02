@@ -15,7 +15,14 @@ pygame.display.set_caption("First Draft WE")
 clock = pygame.time.Clock()
 score = 0
 
-    
+
+door_width = 80
+door_depth = 20
+
+north_door_rect = pygame.Rect((screen_width // 2) - (door_width // 2), 0, door_width, door_depth)
+south_door_rect = pygame.Rect((screen_width // 2)- (door_width // 2), screen_height - door_depth, door_width, door_depth)
+east_door_rect = pygame.Rect(screen_width - door_depth, (screen_height // 2) - (door_width // 2), door_depth, door_width)
+west_door_rect = pygame.Rect(0, (screen_height // 2) - (door_width // 2), door_depth, door_width)
 #making an player object i.e the magical wizard
 wizard = player(400,200,64,64)
 
@@ -83,7 +90,19 @@ class spell_book():
 
 #function to make things appear (magically!?)
 def render_game():
+
     screen.fill("Grey")
+
+    if current_room.cleared and not room_key.visible:
+        if 'north' in current_room.connections:
+            pygame.draw.rect(screen, (0,0,0), north_door_rect)
+        if 'south' in current_room.connections:
+            pygame.draw.rect(screen, (0,0,0), south_door_rect)
+        if 'east' in current_room.connections:
+            pygame.draw.rect(screen, (0,0,0), east_door_rect)
+        if 'west' in current_room.connections:
+            pygame.draw.rect(screen, (0,0,0), west_door_rect)
+
     text = font.render(f'Score: {score}', 1, (255,0,0))
     game_name = font.render(f"Weclome to Wizard Excorcist: Redemption of the fallen castle", 1, (128,100,255))
     screen.blit(game_name,(70, 20))
@@ -218,21 +237,28 @@ while run:
     
     next_room_key = None
 
-    if current_room.cleared:
+    if current_room.cleared and not room_key.visible:
 
-        if wizard.x_pos > 740 and 'east' in current_room.connections:
+        if wizard_rect.colliderect(east_door_rect) and 'east' in current_room.connections:
             next_room_key = current_room.connections['east']
-            wizard.x_pos = 50
-        elif wizard.x_pos < 10 and 'west' in current_room.connections:
+            wizard.x_pos = door_depth + 10
+        elif wizard_rect.colliderect(west_door_rect) and 'west' in current_room.connections:
             next_room_key = current_room.connections['west']
-            wizard.x_pos = 690
+            wizard.x_pos = screen_width - 128 - door_depth - 10
 
-        elif wizard.y_pos < 40 and 'north' in current_room.connections:
+        if wizard_rect.colliderect(north_door_rect) and 'north' in current_room.connections:
             next_room_key = current_room.connections['north']
-            wizard.y_pos = 690
-        elif wizard.y_pos > 730 and 'south' in current_room.connections:
+            wizard.y_pos = screen_height - 128 - door_depth - 10
+        if wizard_rect.colliderect(north_door_rect) and 'north' in current_room.connections:
+            next_room_key = current_room.connections['north']
+            wizard.y_pos = screen_height - 128 - door_depth - 10
+        elif wizard_rect.colliderect(south_door_rect) and 'south' in current_room.connections:
             next_room_key = current_room.connections['south']
-            wizard.y_pos = 100  
+            wizard.y_pos = door_depth + 10
+        if wizard_rect.colliderect(south_door_rect) and 'south' in current_room.connections:
+            wizard.y_pos = door_depth + 10
+
+
 
     if next_room_key:
         current_room_key = next_room_key
