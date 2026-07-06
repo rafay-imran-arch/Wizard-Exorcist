@@ -11,6 +11,7 @@ class Room():
         self.cleared = False
 
         self.connections = {}
+        self.hidden_doors = []
 
 def build_dungeon():
 
@@ -22,7 +23,7 @@ def build_dungeon():
             bat(60,100,128,128)
         ]),
 
-        "east guardroom": Room("The abandoned East Guardroom",[
+        "the solar": Room("The abandoned solar room",[
             slime(200,100,128,128),
             bat(500,70,128,128)
         ]),
@@ -31,11 +32,165 @@ def build_dungeon():
             bat(200,50,128,128),
             bat(100,200,128,128),
             bat(600,300,128,128)
+        ]),
+
+        "the study": Room("The abandoned Library",[
+            slime(500,100,128,128),
+            slime(600,20,128,128),
+            bat(100,200,128,128),
+            bat(200,400,128,128),
+        ]),
+
+        'spawn room2' : Room("Lower area of great hall",[
+            bat(800,122,128,128),
+            bat(400,200,128,128),
+            ghost(300,500,128,128)
+        ]),
+
+        "lord's chambers": Room('The master bedroom', [
+            slime(200,100,128,128),
+            slime(100,300,128,128),
+            slime(600,250,128,128)
+        ]),
+
+        "great dining": Room('The great dining hall',[
+            slime(400,120,128,128),
+            bat(300,650,128,128),
+            ghost(200,450,128,128),
+            ghost(40,28,128,128)
+        ]),
+
+        "spawn room3": Room("south expansion of great hallway",[
+            ghost(10,129,128,128),
+            ghost(45,650,128,128),
+            pumpkin(500,500,128,128),
+        ]),
+
+        "princes room": Room('The grand room of prince',[
+            bat(240,120,128,128),
+            bat(200,300,128,128),
+            pumpkin(500,128,128,128),
+            slime(300,650,128,128)
+        ]),
+
+        "dungeon stairs": Room('The stairs which lead to dungeon',[
+            ghost(100,200,128,128),
+            bat(400,125,128,128),
+            ghost(342,633,128,128),
+            bat(123,321,128,128)
+        ]),
+
+        "banquet hall": Room('The banquet hall',[
+            ghost(432,124,128,128),
+            ghost(532,364,128,128)
+        ]),
+
+        # WEST WING HALLWAY
+
+        "west wing hallway1": Room("The west wing hallway",[
+            slime(120,400,128,128),
+            pumpkin(213,435,128,128),
+            pumpkin(435,213,128,128),
+            ghost(563,124,128,128)
+        ]),
+
+        "west wing hallway2": Room("The second part of west wing hallway", [
+            slime(313,124,128,128)
+        ]),
+
+        "west wing hallway3": Room("The third part fo the west wing hallway", [
+            bat(421,145,128,128),
+            ghost(241,632,128,128)
+        ]),
+
+        'north west guard': Room("North west guardroom",[
+            slime(241,124,128,128)
+        ]),
+
+        # EAST WING HALLWAY 
+
+        'east wing hallway1': Room("The east wing hallway", [
+            slime(300,124,128,128),
+            bat(543,532,128,128),
+            bat(761,321,128,128)
+        ]),
+        
+        'east wing hallway2': Room("The second part of east wing hallway", [
+            ghost(245,12,128,128),
+            pumpkin(87,81,128,128),
+            ghost(52,29,128,128)
+        ]),
+
+        'east wing hallway3': Room("The third part of the east wing hallway", [
+            bat(29,12,128,128),
+            slime(742,124,128,128)
+        ]),
+
+        'north east guard': Room("The guardroom/tower of north east", [
+            ghost(214,35,128,128),
+            ghost(593,129,128,128),
+            ghost(300,295,128,128)
         ])
+    
     }
 
-    rooms["spawn room"].connections = {'north': "north vault", "east": "east guardroom"}
-    rooms["east guardroom"].connections = {'west': "spawn room"}
+
+    rooms["spawn room"].connections = {'north': "north vault", "east": "the solar", "west": "the study", 'south': "spawn room2"}
+    rooms["the study"].connections = {'east': 'spawn room', 'west': 'west wing hallway1'}
+    rooms["the solar"].connections = {'west': "spawn room", 'east': 'east wing hallway1'}
     rooms['north vault'].connections = {'south': "spawn room"}
+    
+    # The expansiong of spawn hallway towars south hecne named 2
+    rooms['spawn room2'].connections = {'north': "spawn room", 'west': "lord's chambers", 'east': 'great dining', 'south': 'spawn room3'}
+    rooms["lord's chambers"].connections = {'east': 'spawn room2'}
+    rooms["great dining"].connections = {'east': 'east wing hallway2', 'west': 'spawn room2'}
+
+    # Spawn hallway expansion 3
+    rooms['spawn room3'].connections = {'north': 'spawn room2', 'west': 'princes room', 'east': 'dungeon stairs'}
+    rooms['princes room'].connections = {'east': 'spawn room3'}
+    rooms['dungeon stairs'].connections = {'west': 'spawn room3'}
+
+    #West wing hallway connections
+    rooms['west wing hallway1'].connections = {'north':'north west guard', 'east': 'the study'} 
+    rooms['west wing hallway2'].connections = {'east': 'banquet hall'}
+
+
+
+    rooms['north west guard'].connections = {"south" : 'west wing hallway1'}
+
+
+    #East wing hallway connections
+    rooms['east wing hallway1'].connections = {'north': 'north east guard', 'west': 'the solar'}
+    rooms['east wing hallway2'].connections = {'south': 'east wing hallway3', 'west': 'great dining'}
+    rooms['east wing hallway3'].connections = {'west': 'dungeon stairs'}
+
+
+    rooms['north east guard'].connections = {'south': 'east wing hallway1'}
+    
+
+
+
+
+
+
+
+
+
+    # The great hallway/ spawn room hallway
+
+    rooms["spawn room"].hidden_doors = ['south']
+    rooms['spawn room2'].hidden_doors = ['north', 'south']
+    rooms['spawn room3'].hidden_doors = ['north']
+
+    #The West Wing Hallway 
+
+    rooms['west wing hallway1'].hidden_doors = ['south']
+    rooms['west wing hallway2'].hidden_doors = ['north', 'south']
+    rooms['west wing hallway3'].hidden_doors = ['north']
+
+    #The East Wing Hallway
+    rooms['east wing hallway1'].hidden_doors = ['south']
+    rooms['east wing hallway2'].hidden_doors = ['north', 'south']
+    rooms['east wing hallway3'].hidden_doors = ['north']
 
     return rooms
