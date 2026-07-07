@@ -5,13 +5,15 @@ pygame.init()
 
 
 class Room():
-    def __init__(self, name, enemy_list):
+    def __init__(self, name, enemy_list, image_name="default_room"):
         self.name = name
         self.enemies = enemy_list
         self.cleared = False
-
+        
         self.connections = {}
         self.hidden_doors = []
+
+        self.background_path = os.path.join("src","assets",'rooms', f"{image_name}.png")
 
 def build_dungeon():
 
@@ -107,6 +109,10 @@ def build_dungeon():
             slime(241,124,128,128)
         ]),
 
+        'south west guard': Room('The south east guradroom/tower', [
+            ghost(412,524,128,128),
+        ]),
+
         # EAST WING HALLWAY 
 
         'east wing hallway1': Room("The east wing hallway", [
@@ -130,30 +136,38 @@ def build_dungeon():
             ghost(214,35,128,128),
             ghost(593,129,128,128),
             ghost(300,295,128,128)
+        ]),
+
+        'south east guard': Room('The guardroom/tower of south east side', [
+            bat(742,400,128,128),
+            pumpkin(444,542,128,128),
+            ghost(204,729,128,128),
+            ghost(600,600,128,128)
         ])
     
     }
 
 
     rooms["spawn room"].connections = {'north': "north vault", "east": "the solar", "west": "the study", 'south': "spawn room2"}
+    rooms["north vault"].connections = {'south': 'spawn room'}
     rooms["the study"].connections = {'east': 'spawn room', 'west': 'west wing hallway1'}
-    rooms["the solar"].connections = {'west': "spawn room", 'east': 'east wing hallway1'}
-    rooms['north vault'].connections = {'south': "spawn room"}
-    
+    rooms["the solar"].connections = {'east': 'east wing hallway1', 'west': 'spawn room'}    
     # The expansiong of spawn hallway towars south hecne named 2
     rooms['spawn room2'].connections = {'north': "spawn room", 'west': "lord's chambers", 'east': 'great dining', 'south': 'spawn room3'}
     rooms["lord's chambers"].connections = {'east': 'spawn room2'}
-    rooms["great dining"].connections = {'east': 'east wing hallway2', 'west': 'spawn room2'}
+    rooms['great dining'].connections = {'east': 'east wing hallway2', 'west': 'spawn room2'}
 
     # Spawn hallway expansion 3
-    rooms['spawn room3'].connections = {'north': 'spawn room2', 'west': 'princes room', 'east': 'dungeon stairs'}
-    rooms['princes room'].connections = {'east': 'spawn room3'}
-    rooms['dungeon stairs'].connections = {'west': 'spawn room3'}
+    rooms['spawn room3'].connections = {'north': 'spawn room2', 'east': 'banquet hall', 'west': 'dungeon stairs'}
+    rooms['banquet hall'].connections = {'east': 'spawn room3', 'west': 'west wing hallway2'}
+    rooms['dungeon stairs'].connections = {'east': 'east wing hallway3', 'west': 'spawn room3'}
+    rooms['princes room'].connections = {'west': 'west wing hallway3'}
 
     #West wing hallway connections
     rooms['west wing hallway1'].connections = {'north':'north west guard', 'east': 'the study'} 
     rooms['west wing hallway2'].connections = {'east': 'banquet hall'}
-
+    rooms['west wing hallway3'].connections = {'east': 'princes room', 'south': 'south west guard'}
+        
 
 
     rooms['north west guard'].connections = {"south" : 'west wing hallway1'}
@@ -162,7 +176,7 @@ def build_dungeon():
     #East wing hallway connections
     rooms['east wing hallway1'].connections = {'north': 'north east guard', 'west': 'the solar'}
     rooms['east wing hallway2'].connections = {'south': 'east wing hallway3', 'west': 'great dining'}
-    rooms['east wing hallway3'].connections = {'west': 'dungeon stairs'}
+    rooms['east wing hallway3'].connections = {'west': 'dungeon stairs', 'south': 'south east guard'}
 
 
     rooms['north east guard'].connections = {'south': 'east wing hallway1'}

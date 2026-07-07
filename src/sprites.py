@@ -22,7 +22,7 @@ class player():
         self.is_jump = False
         self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
         self.mana = 10
-        self.health = 10
+        self.health = 100
 
         #Defining player visuals
         self.idle_dir = os.path.join('src', 'assets', 'wizards', 'Char 1', 'Type 1', 'Attack')

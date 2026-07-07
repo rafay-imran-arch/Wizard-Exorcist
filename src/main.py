@@ -91,16 +91,22 @@ class spell_book():
 #function to make things appear (magically!?)
 def render_game():
 
-    screen.fill("Grey")
+
+    if os.path.exists(current_room.background_path):
+        room_bg = pygame.image.load(current_room.background_path)
+        screen.blit(room_bg, (0,0))
+    else:
+        screen.fill('Grey')
 
     if current_room.cleared and not room_key.visible:
-        if 'north' in current_room.connections:
+        hidden = getattr(current_room, 'hidden_doors', [])
+        if 'north' in current_room.connections and 'north' not in hidden:
             pygame.draw.rect(screen, (0,0,0), north_door_rect)
-        if 'south' in current_room.connections:
+        if 'south' in current_room.connections and 'south' not in hidden:
             pygame.draw.rect(screen, (0,0,0), south_door_rect)
-        if 'east' in current_room.connections:
+        if 'east' in current_room.connections and 'east' not in hidden:
             pygame.draw.rect(screen, (0,0,0), east_door_rect)
-        if 'west' in current_room.connections:
+        if 'west' in current_room.connections and 'west' not in hidden:
             pygame.draw.rect(screen, (0,0,0), west_door_rect)
 
     text = font.render(f'Score: {score}', 1, (255,0,0))
@@ -113,6 +119,7 @@ def render_game():
     room_key.draw(screen)
     for spell in spells:
         spell.draw(screen)
+
 
     for spell in repel_spells[:]:
         spell.draw(screen)
@@ -129,11 +136,14 @@ def render_game():
     clock.tick(30)
 
 
+#SOUND SYSTEM
 
 sound_dir = os.path.join('src','assets', 'sounds')
+unlock_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'unlock.mp3'))
 recharge_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'recharge.mp3'))
-spell_shoot_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spellshoot.mp3'))
+hurt_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'hurt.mp3'))
 spell_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell.mp3'))
+spell2_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell2.mp3'))
 game_music = pygame.mixer.music.load(os.path.join(sound_dir, "bg.mp3"))
 pygame.mixer.music.play(-1)
 
@@ -204,7 +214,7 @@ while run:
         
         if enemy_rect.colliderect(wizard_rect):
             if player_hit_cooldown == 0:
-                spell_shoot_sound.play()
+                hurt_sound.play()
                 wizard.hit()
                 score -= 2
                 player_hit_cooldown = 30
@@ -272,7 +282,7 @@ while run:
     if room_key.visible and not room_key.collected:
         if  wizard_rect.colliderect(room_key.rect):
             score += 10
-            spell_shoot_sound.play()
+            unlock_sound.play()
             room_key.visible = False
             room_key.collected = True
             room_key.text_timer = 150
@@ -314,7 +324,9 @@ while run:
         recharge_sound.stop()
     
     if keys[pygame.K_f]:
+        
         if len(repel_spells) == 0 and wizard.mana >=3:
+            spell2_sound.play()
             wizard.mana -= 3
 
             center_x = wizard.x_pos + wizard.character_size[0] // 2
@@ -322,8 +334,8 @@ while run:
 
             new_repel = repel_spell(center_x, center_y, wizard.facing)
             repel_spells.append(new_repel)
-
-    if keys[pygame.K_SPACE] and shoot_loop == 0:
+      
+    if keys[pygame.K_SPACE] and shoot_loop == 0 and not keys[pygame.K_COMMA]:
         if wizard.mana > 0 and len(spells) < spell_limit:
             wizard.mana -= 1
             spell_sound.play()
