@@ -15,6 +15,21 @@ pygame.display.set_caption("First Draft WE")
 clock = pygame.time.Clock()
 score = 0
 
+game_state = "MENU"
+
+start_screen_path = os.path.join("src","assets","ux","start_screen.png")
+if os.path.exists(start_screen_path):
+    start_screen_bg = pygame.image.load(start_screen_path).convert()
+else:
+    start_screen_bg = None
+
+play_button_rect = pygame.Rect(300,400,200,60)
+exit_button_rect = pygame.Rect(300,470,200,60)
+
+
+color_normal = (70, 50, 110)
+color_hover = (128, 100, 255)
+
 
 door_width = 80
 door_depth = 20
@@ -161,187 +176,227 @@ player_hit_cooldown = 0
 dungeon = build_dungeon()
 current_room_key = 'spawn room'
 current_room = dungeon[current_room_key]
-
 enemies = current_room.enemies
 #Main loop
 while run:
 
-    if shoot_loop > 0:
-        shoot_loop += 1
-    if shoot_loop > 3:
-        shoot_loop = 0
-
-    if player_hit_cooldown > 0:
-        player_hit_cooldown -= 1
-
-    if room_key.collected and room_key.text_timer > 0:
-        room_key.text_timer -= 1
-
-    #check for event
+    mouse_pos = pygame.mouse.get_pos()
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
         
-    for spell in spells[:]:        
-            if (spell.x_pos < screen_width and spell.x_pos > 0) and (spell.y_pos < screen_height and spell.y_pos > 0):
-                if spell.facing == "right":
-                    spell.x_pos += spell.vel
-                elif spell.facing == "left":
-                    spell.x_pos -= spell.vel
-                elif spell.facing == "upwards":
-                    spell.y_pos -= spell.vel
-                elif spell.facing == 'downwards':
-                    spell.y_pos += spell.vel
-            else: 
-                spells.pop(spells.index(spell))
-                break  # <--- Stops processing this spell instantly
-    wizard_rect = pygame.Rect(wizard.x_pos + 10, wizard.y_pos, 100, 128)
+        if game_state == 'MENU':
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if play_button_rect.collidepoint(mouse_pos):
+                    game_state = "PLAYING"
+                elif exit_button_rect.collidepoint(mouse_pos):
+                    run = False
 
-    for enemy in enemies:
-        if enemy.x < 0:
-            enemy.x = 0
-        elif enemy.x > screen_width - enemy.hit_box[2]:
-            enemy.x = screen_width - enemy.hit_box[2]
+    if game_state == "MENU":
+        if start_screen_bg:
+            screen.blit(start_screen_bg, (0,0))
+        else:
+            screen.fill('Grey')
 
-        if enemy.y < 0:
-            enemy.y = 0 
-        elif enemy.y > screen_height - enemy.hit_box[3]:
-            enemy.y = screen_height - enemy.hit_box[3]
-
-        enemy.hit_box = (enemy.x, enemy.y, enemy.hit_box[2], enemy.hit_box[3])
-
-        enemy_rect = pygame.Rect(enemy.hit_box[0], enemy.hit_box[1], enemy.hit_box[2], enemy.hit_box[3])
         
-        if enemy_rect.colliderect(wizard_rect):
-            if player_hit_cooldown == 0:
-                hurt_sound.play()
-                wizard.hit()
-                score -= 2
-                player_hit_cooldown = 30
-        if enemy.visible:
-            for spell in spells[:]:
+        if play_button_rect.collidepoint(mouse_pos):
+            pygame.draw.rect(screen, color_hover, play_button_rect, border_radius=10)
+        else:
+            pygame.draw.rect(screen, color_normal, play_button_rect, border_radius=10)
+
+        if exit_button_rect.collidepoint(mouse_pos):
+            pygame.draw.rect(screen, color_hover, exit_button_rect, border_radius=10)
+        else:
+            pygame.draw.rect(screen, color_normal, exit_button_rect, border_radius=10)
+
+        exit_text = font.render("ABANDON", True, (255,255,255))
+        screen.blit(exit_text, (350, 495))
+        play_text = font.render("ENTER CASTLE", True, (255,255,255))
+        screen.blit(play_text, (325, 415))
+
+        pygame.display.update()
+    
+    elif game_state == "PLAYING":
+
+        if shoot_loop > 0:
+            shoot_loop += 1
+        if shoot_loop > 3:
+            shoot_loop = 0
+
+        if player_hit_cooldown > 0:
+            player_hit_cooldown -= 1
+
+
+        if room_key.collected and room_key.text_timer > 0:
+            room_key.text_timer -= 1
+
+
+        for spell in spells[:]:        
+                if (spell.x_pos < screen_width and spell.x_pos > 0) and (spell.y_pos < screen_height and spell.y_pos > 0):
+                    if spell.facing == "right":
+                        spell.x_pos += spell.vel
+                    elif spell.facing == "left":
+                        spell.x_pos -= spell.vel
+                    elif spell.facing == "upwards":
+                        spell.y_pos -= spell.vel
+                    elif spell.facing == 'downwards':
+                        spell.y_pos += spell.vel
+                else: 
+                    spells.pop(spells.index(spell))
+                    break  # <--- Stops processing this spell instantly
+        wizard_rect = pygame.Rect(wizard.x_pos + 10, wizard.y_pos, 100, 128)
+
+        for enemy in enemies:
+            if enemy.x < 0:
+                enemy.x = 0
+            elif enemy.x > screen_width - enemy.hit_box[2]:
+                enemy.x = screen_width - enemy.hit_box[2]
+
+            if enemy.y < 0:
+                enemy.y = 0 
+            elif enemy.y > screen_height - enemy.hit_box[3]:
+                enemy.y = screen_height - enemy.hit_box[3]
+
+            enemy.hit_box = (enemy.x, enemy.y, enemy.hit_box[2], enemy.hit_box[3])
+
+            enemy_rect = pygame.Rect(enemy.hit_box[0], enemy.hit_box[1], enemy.hit_box[2], enemy.hit_box[3])
+            
+            if enemy_rect.colliderect(wizard_rect):
+                if player_hit_cooldown == 0:
+                    hurt_sound.play()
+                    wizard.hit()
+                    score -= 2
+                    player_hit_cooldown = 30
+            if enemy.visible:
+                for spell in spells[:]:
+                        spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
+
+                        if enemy_rect.colliderect(spell_rect):
+                            enemy.hit()
+                            score += 1
+
+                            if spell in spells:
+                                spells.remove(spell)
+
+                            if not enemy.visible:
+                                if enemy in enemies:
+                                    enemies.remove(enemy)
+                            break
+            
+            if enemy.visible:
+                for spell in spells[:]:
                     spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
 
-                    if enemy_rect.colliderect(spell_rect):
-                        enemy.hit()
-                        score += 1
-
-                        if spell in spells:
-                            spells.remove(spell)
-
-                        if not enemy.visible:
-                            if enemy in enemies:
-                                enemies.remove(enemy)
-                        break
-
         
-    for spell in repel_spells[:]:
-        spell.update(enemies)
-        if not spell.active: 
-            repel_spells.remove(spell)
-            
-    enemies = [e for e in enemies if e.visible]
-    if len(enemies) == 0 and not current_room.cleared:
-        current_room.cleared = True
-        room_key.visible = True 
-    
-    next_room_key = None
-
-    if current_room.cleared and not room_key.visible:
-
-        if wizard_rect.colliderect(east_door_rect) and 'east' in current_room.connections:
-            next_room_key = current_room.connections['east']
-            wizard.x_pos = door_depth + 10
-        elif wizard_rect.colliderect(west_door_rect) and 'west' in current_room.connections:
-            next_room_key = current_room.connections['west']
-            wizard.x_pos = screen_width - 128 - door_depth - 10
-
-        if wizard_rect.colliderect(north_door_rect) and 'north' in current_room.connections:
-            next_room_key = current_room.connections['north']
-            wizard.y_pos = screen_height - 128 - door_depth - 10
-        if wizard_rect.colliderect(north_door_rect) and 'north' in current_room.connections:
-            next_room_key = current_room.connections['north']
-            wizard.y_pos = screen_height - 128 - door_depth - 10
-        elif wizard_rect.colliderect(south_door_rect) and 'south' in current_room.connections:
-            next_room_key = current_room.connections['south']
-            wizard.y_pos = door_depth + 10
-        if wizard_rect.colliderect(south_door_rect) and 'south' in current_room.connections:
-            wizard.y_pos = door_depth + 10
-
-
-
-    if next_room_key:
-        current_room_key = next_room_key
-        current_room = dungeon[current_room_key]
-        enemies = current_room.enemies
-
-        if not current_room.cleared:
-            room_key.visible = False
-            room_key.collected = False
-
-    if room_key.visible and not room_key.collected:
-        if  wizard_rect.colliderect(room_key.rect):
-            score += 10
-            unlock_sound.play()
-            room_key.visible = False
-            room_key.collected = True
-            room_key.text_timer = 150
-
-            
-    #check key presses for controls 
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
-        wizard.facing = "left"
-        wizard.is_moving = True
-        if wizard.x_pos > 0:
-            wizard.x_pos -= wizard.vel
-    
-    elif keys[pygame.K_RIGHT]:
-        wizard.facing = "right"
-        wizard.is_moving = True
-        if wizard.x_pos < screen_width - wizard.character_size[0]+ 20:
-            wizard.x_pos += wizard.vel
-
-    elif keys[pygame.K_UP]:
-        wizard.facing = "upwards"
-        wizard.is_moving = True 
-        if wizard.y_pos > 0:
-            wizard.y_pos -= wizard.vel
-
-    elif keys[pygame.K_DOWN]:
-        wizard.facing = "downwards"
-        wizard.is_moving = True
-        if wizard.y_pos< screen_height - wizard.character_size[1]:
-            wizard.y_pos += wizard.vel
-    else:
-        wizard.is_moving = False
-    
-    if keys[pygame.K_COMMA]:
-        recharge_sound.play()
-        if wizard.mana < 10:
-            wizard.mana += 1
-    else:
-        recharge_sound.stop()
-    
-    if keys[pygame.K_f]:
+        for spell in repel_spells[:]:
+            spell.update(enemies)
+            if not spell.active:
+                repel_spells.remove(spell)
         
-        if len(repel_spells) == 0 and wizard.mana >=3:
-            spell2_sound.play()
-            wizard.mana -= 3
+                
+        enemies = [e for e in enemies if e.visible]
+        if len(enemies) == 0 and not current_room.cleared:
+            current_room.cleared = True
+            room_key.visible = True 
+        
+        next_room_key = None
 
-            center_x = wizard.x_pos + wizard.character_size[0] // 2
-            center_y = wizard.y_pos + wizard.character_size[1] // 2
+        if current_room.cleared and not room_key.visible:
 
-            new_repel = repel_spell(center_x, center_y, wizard.facing)
-            repel_spells.append(new_repel)
-      
-    if keys[pygame.K_SPACE] and shoot_loop == 0 and not keys[pygame.K_COMMA]:
-        if wizard.mana > 0 and len(spells) < spell_limit:
-            wizard.mana -= 1
-            spell_sound.play()
-            spells.append(projectile_spell(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
-        shoot_loop = 1  
-    render_game()
+            if wizard_rect.colliderect(east_door_rect) and 'east' in current_room.connections:
+                next_room_key = current_room.connections['east']
+                wizard.x_pos = door_depth + 10
+            elif wizard_rect.colliderect(west_door_rect) and 'west' in current_room.connections:
+                next_room_key = current_room.connections['west']
+                wizard.x_pos = screen_width - 128 - door_depth - 10
+
+            if wizard_rect.colliderect(north_door_rect) and 'north' in current_room.connections:
+                next_room_key = current_room.connections['north']
+                wizard.y_pos = screen_height - 128 - door_depth - 10
+            if wizard_rect.colliderect(north_door_rect) and 'north' in current_room.connections:
+                next_room_key = current_room.connections['north']
+                wizard.y_pos = screen_height - 128 - door_depth - 10
+            elif wizard_rect.colliderect(south_door_rect) and 'south' in current_room.connections:
+                next_room_key = current_room.connections['south']
+                wizard.y_pos = door_depth + 10
+            if wizard_rect.colliderect(south_door_rect) and 'south' in current_room.connections:
+                wizard.y_pos = door_depth + 10
+
+
+
+        if next_room_key:
+            current_room_key = next_room_key
+            current_room = dungeon[current_room_key]
+            enemies = current_room.enemies
+
+            if not current_room.cleared:
+                room_key.visible = False
+                room_key.collected = False
+
+        if room_key.visible and not room_key.collected:
+            if  wizard_rect.colliderect(room_key.rect):
+                score += 10
+                unlock_sound.play()
+                room_key.visible = False
+                room_key.collected = True
+                room_key.text_timer = 150
+
+                
+        #check key presses for controls 
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            wizard.facing = "left"
+            wizard.is_moving = True
+            if wizard.x_pos > 0:
+                wizard.x_pos -= wizard.vel
+        
+        elif keys[pygame.K_RIGHT]:
+            wizard.facing = "right"
+            wizard.is_moving = True
+            if wizard.x_pos < screen_width - wizard.character_size[0]+ 20:
+                wizard.x_pos += wizard.vel
+
+        elif keys[pygame.K_UP]:
+            wizard.facing = "upwards"
+            wizard.is_moving = True 
+            if wizard.y_pos > 0:
+                wizard.y_pos -= wizard.vel
+
+        elif keys[pygame.K_DOWN]:
+            wizard.facing = "downwards"
+            wizard.is_moving = True
+            if wizard.y_pos< screen_height - wizard.character_size[1]:
+                wizard.y_pos += wizard.vel
+        else:
+            wizard.is_moving = False
+        
+        if keys[pygame.K_COMMA]:
+            recharge_sound.play()
+            if wizard.mana < 10:
+                wizard.mana += 1
+        else:
+            recharge_sound.stop()
+        
+        if keys[pygame.K_f]:
+            
+            if len(repel_spells) == 0 and wizard.mana >=3:
+                spell2_sound.play()
+                wizard.mana -= 3
+
+                center_x = wizard.x_pos + wizard.character_size[0] // 2
+                center_y = wizard.y_pos + wizard.character_size[1] // 2
+
+                new_repel = repel_spell(center_x, center_y, wizard.facing)
+                repel_spells.append(new_repel)
+        
+        if keys[pygame.K_SPACE] and shoot_loop == 0 and not keys[pygame.K_COMMA]:
+            if wizard.mana > 0 and len(spells) < spell_limit:
+                wizard.mana -= 1
+                spell_sound.play()
+                spells.append(projectile_spell(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
+            shoot_loop = 1  
+        render_game()
 
     
 pygame.quit()

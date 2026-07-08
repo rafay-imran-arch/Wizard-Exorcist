@@ -167,7 +167,6 @@ def build_dungeon():
     rooms['west wing hallway1'].connections = {'north':'north west guard', 'east': 'the study'} 
     rooms['west wing hallway2'].connections = {'east': 'banquet hall'}
     rooms['west wing hallway3'].connections = {'east': 'princes room', 'south': 'south west guard'}
-        
 
 
     rooms['north west guard'].connections = {"south" : 'west wing hallway1'}
@@ -203,8 +202,11 @@ def build_dungeon():
     rooms['west wing hallway3'].hidden_doors = ['north']
 
     #The East Wing Hallway
-    rooms['east wing hallway1'].hidden_doors = ['south']
+    rooms['east wing hallway1'].hidden_doors = ['south', 'north']
     rooms['east wing hallway2'].hidden_doors = ['north', 'south']
     rooms['east wing hallway3'].hidden_doors = ['north']
 
     return rooms
+
+# NOTES TO SELF :
+# THE UPPER ROOMS ie NORTH and the BOTTOM rooms ie SOUTH of Hallway1 and 3 should be ignored respectively
