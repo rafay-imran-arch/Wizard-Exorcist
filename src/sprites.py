@@ -23,6 +23,7 @@ class player():
         self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
         self.mana = 10
         self.health = 100
+        self.max_health = 100
 
         #Defining player visuals
         self.idle_dir = os.path.join('src', 'assets', 'wizards', 'Char 1', 'Type 1', 'Attack')
@@ -109,16 +110,20 @@ class player():
         pygame.draw.rect(screen, (255,128,140), (self.hit_box[0], self.hit_box[1]-20 , 80, 10))
         mana_width = int((self.mana/10)*80)
         pygame.draw.rect(screen, (128,255,210), (self.hit_box[0], self.hit_box[1]-20, mana_width, 10))
-        #health 
+        #health bar system upgraded with better health 100 and accurate visual loss
         pygame.draw.rect(screen, (255,0,0), (self.hit_box[0], self.hit_box[1]-10, 80, 10))
-        health_width = int((self.health/10) * 80)
-        if health_width <0: health_width = 0
+        health_ratio =  self.health / self.max_health
+        health_width = int(health_ratio * 80)
+        if health_width < 0:
+            health_width = 0
         pygame.draw.rect(screen, (40,255,40), (self.hit_box[0], self.hit_box[1]-10, health_width, 10))
 
 
-    def hit(self):
+
+
+    def hit(self, damage_ammount):
         if self.health > 0:
-            self.health -= 1
+            self.health -= damage_ammount
             self.walk_count = 0
             pygame.display.update()
        
@@ -126,7 +131,7 @@ class player():
 
 class enemy():
     
-    def __init__(self,x, y, width, height, max_health, vel):
+    def __init__(self,x, y, width, height, max_health, vel, damage):
         self.x = x
         self.y = y
         self.width = width
@@ -134,6 +139,7 @@ class enemy():
         self.health = max_health
         self.max_health = max_health
         self.vel = vel
+        self.damage = damage
 
         #Some constants 
         self.walk_count = 0
@@ -158,7 +164,7 @@ class enemy():
 
 class ghost(enemy):
     def __init__(self, x, y, width, height):
-        super().__init__(x,y,width,height,max_health=10,vel=1.5)
+        super().__init__(x,y,width,height,max_health=10,vel=1.5, damage=2.5)
 
         #Asset loading of ghosts
         ghost_dir = os.path.join(self.enemy_dir, 'Ghost')
@@ -220,7 +226,7 @@ class ghost(enemy):
 class bat(enemy):
 
     def __init__(self, x, y, width, height):
-        super().__init__(x,y,width,height,max_health=5,vel=2.5)
+        super().__init__(x,y,width,height,max_health=5,vel=2.5, damage=1.5)
 
         #bat assets
         self.bat_dir = os.path.join(self.enemy_dir, "Bat")
@@ -284,7 +290,7 @@ class bat(enemy):
 class slime(enemy):
 
     def __init__(self,x, y, width, height):
-        super().__init__(x, y, width, height, max_health=15, vel=2.2)
+        super().__init__(x, y, width, height, max_health=15, vel=2.2, damage=3.5)
 
         #loading slime assets
         slime_dir = os.path.join(self.enemy_dir, 'Slime')
@@ -354,7 +360,7 @@ class slime(enemy):
 
 class pumpkin(enemy):
     def __init__(self, x, y, width, height):
-        super().__init__(x, y, width, height, max_health=25, vel=1.8)
+        super().__init__(x, y, width, height, max_health=25, vel=1.8, damage=5)
 
         pumpkin_dir = os.path.join(self.enemy_dir, 'Pumpkin')
 

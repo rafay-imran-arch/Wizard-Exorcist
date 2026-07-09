@@ -168,35 +168,24 @@ def build_dungeon():
     rooms['west wing hallway2'].connections = {'east': 'banquet hall'}
     rooms['west wing hallway3'].connections = {'east': 'princes room', 'south': 'south west guard'}
 
-
-    rooms['north west guard'].connections = {"south" : 'west wing hallway1'}
-
-
     #East wing hallway connections
     rooms['east wing hallway1'].connections = {'north': 'north east guard', 'west': 'the solar'}
     rooms['east wing hallway2'].connections = {'south': 'east wing hallway3', 'west': 'great dining'}
     rooms['east wing hallway3'].connections = {'west': 'dungeon stairs', 'south': 'south east guard'}
 
-
+    #Guardrooms/ towers connections
     rooms['north east guard'].connections = {'south': 'east wing hallway1'}
-    
-
-
-
-
-
-
-
+    rooms['south east guard'].connections = {'north': 'east wing hallway3'}
+    rooms['north west guard'].connections = {'south': 'west wing hallway1'}
+    rooms['south west guard'].connections = {'north': 'west wing hallway3'}
 
 
     # The great hallway/ spawn room hallway
-
     rooms["spawn room"].hidden_doors = ['south']
     rooms['spawn room2'].hidden_doors = ['north', 'south']
     rooms['spawn room3'].hidden_doors = ['north']
 
-    #The West Wing Hallway 
-
+    #The West Wing Hallway  
     rooms['west wing hallway1'].hidden_doors = ['south']
     rooms['west wing hallway2'].hidden_doors = ['north', 'south']
     rooms['west wing hallway3'].hidden_doors = ['north']
@@ -206,7 +195,7 @@ def build_dungeon():
     rooms['east wing hallway2'].hidden_doors = ['north', 'south']
     rooms['east wing hallway3'].hidden_doors = ['north']
 
-    return rooms
+    return rooms 
 
 # NOTES TO SELF :
 # THE UPPER ROOMS ie NORTH and the BOTTOM rooms ie SOUTH of Hallway1 and 3 should be ignored respectively

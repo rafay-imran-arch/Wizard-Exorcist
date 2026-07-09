@@ -15,6 +15,7 @@ pygame.display.set_caption("First Draft WE")
 clock = pygame.time.Clock()
 score = 0
 
+admin_mode = False
 game_state = "MENU"
 
 start_screen_path = os.path.join("src","assets","ux","start_screen.png")
@@ -125,8 +126,7 @@ def render_game():
             pygame.draw.rect(screen, (0,0,0), west_door_rect)
 
     text = font.render(f'Score: {score}', 1, (255,0,0))
-    game_name = font.render(f"Weclome to Wizard Excorcist: Redemption of the fallen castle", 1, (128,100,255))
-    screen.blit(game_name,(70, 20))
+
     screen.blit(text, (670, 20))
     for e in enemies:
         e.draw(screen,wizard, offset_y=20, bar_width=50, enemies=enemies)
@@ -143,10 +143,7 @@ def render_game():
         clear_level_1 = font.render("Level 1 Cleared", True, (0,255,128))
         screen.blit(clear_level_1, (400,400))
 
-    pygame.draw.rect(screen, (255,0,0), (20, 360, 100, 30))
-    pygame.draw.rect(screen, (0,255,0), (wizard.hit_box[0], wizard.hit_box[1] - 10, 80 - ((80/10)*(10- wizard.health)), 10))
-    health = font.render(f"Health", 1, (0,0,0))
-    screen.blit(health,(40,360))
+
     pygame.display.update()
     clock.tick(30)
 
@@ -210,11 +207,17 @@ while run:
         else:
             pygame.draw.rect(screen, color_normal, exit_button_rect, border_radius=10)
 
-        exit_text = font.render("ABANDON", True, (255,255,255))
-        screen.blit(exit_text, (350, 495))
+        #Display game name on the screen
+        game_name = font.render("Wizard Excorcist: Redemption of the fallen castle", True, (128,100,255))
+        screen.blit(game_name, (200,40))
+        
+        # Play button
         play_text = font.render("ENTER CASTLE", True, (255,255,255))
         screen.blit(play_text, (325, 415))
-
+        # Exit button
+        exit_text = font.render("ABANDON", True, (255,255,255))
+        screen.blit(exit_text, (350, 495))
+        
         pygame.display.update()
     
     elif game_state == "PLAYING":
@@ -265,9 +268,13 @@ while run:
             if enemy_rect.colliderect(wizard_rect):
                 if player_hit_cooldown == 0:
                     hurt_sound.play()
-                    wizard.hit()
-                    score -= 2
+                    wizard.hit(enemy.damage)
+                    if score > 0:
+                        score -= 2
+                    else:
+                        score -= 0
                     player_hit_cooldown = 30
+
             if enemy.visible:
                 for spell in spells[:]:
                         spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
@@ -396,6 +403,25 @@ while run:
                 spell_sound.play()
                 spells.append(projectile_spell(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
             shoot_loop = 1  
+
+
+        if wizard.health <= 0:
+            if admin_mode:
+                pass
+            else:
+                game_state = "MENU"
+                score = 0
+                
+                wizard.health = wizard.max_health
+                wizard.x_pos, wizard.y_pos = 400,200
+                current_room_key = "spawn room"
+                current_room = dungeon[current_room_key]
+                enemies = current_room.enemies
+                room_key.visible = False
+                room_key.collected = False
+
+
+            
         render_game()
 
     
