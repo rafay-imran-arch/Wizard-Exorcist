@@ -1,6 +1,6 @@
 import pygame
 import os 
-from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop
+from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI
 from spells import spells, projectile_spell, repel_spell
 from dungeon import build_dungeon
 
@@ -42,23 +42,9 @@ west_door_rect = pygame.Rect(0, (screen_height // 2) - (door_width // 2), door_d
 #making an player object i.e the magical wizard
 wizard = player(400,200,64,64)
 
-class spells_shoot():
-    
-    def __init__(self, x_pos, y_pos, facing):
-        self.x_pos = x_pos
-        self.y_pos = y_pos
-        self.facing = facing
-        self.vel = 8
-
-        self.spell_dir = os.path.join("src", 'assets', 'spells')
-        self.blue_spell = pygame.transform.scale(
-            pygame.image.load(os.path.join(self.spell_dir, 'spell_1.png')),
-            (64,64)
-        )
-    def draw(self, screen):
-        screen.blit(self.blue_spell, (self.x_pos,self.y_pos))
 
 
+# likely for version 2
 class revive():
     
     def __init__(self, x_pos, y_pos, width, height):
@@ -104,7 +90,7 @@ class spell_book():
         "May i be able to finish this game"
         
 
-#function to make things appear (magically!?)
+#function to make things appear (magically!?) 
 def render_game():
 
 
@@ -171,6 +157,7 @@ player_hit_cooldown = 0
 
 
 dungeon = build_dungeon()
+dungeon_stairs_room_key = None # Add this later a cool type looking key which appears only once you kill all the other enemies
 current_room_key = 'spawn room'
 current_room = dungeon[current_room_key]
 enemies = current_room.enemies
@@ -310,26 +297,20 @@ while run:
         next_room_key = None
 
         if current_room.cleared and not room_key.visible:
-
+            # East and west doors
             if wizard_rect.colliderect(east_door_rect) and 'east' in current_room.connections:
                 next_room_key = current_room.connections['east']
                 wizard.x_pos = door_depth + 10
             elif wizard_rect.colliderect(west_door_rect) and 'west' in current_room.connections:
                 next_room_key = current_room.connections['west']
                 wizard.x_pos = screen_width - 128 - door_depth - 10
-
-            if wizard_rect.colliderect(north_door_rect) and 'north' in current_room.connections:
-                next_room_key = current_room.connections['north']
-                wizard.y_pos = screen_height - 128 - door_depth - 10
+            #North and south doors
             if wizard_rect.colliderect(north_door_rect) and 'north' in current_room.connections:
                 next_room_key = current_room.connections['north']
                 wizard.y_pos = screen_height - 128 - door_depth - 10
             elif wizard_rect.colliderect(south_door_rect) and 'south' in current_room.connections:
                 next_room_key = current_room.connections['south']
                 wizard.y_pos = door_depth + 10
-            if wizard_rect.colliderect(south_door_rect) and 'south' in current_room.connections:
-                wizard.y_pos = door_depth + 10
-
 
 
         if next_room_key:
@@ -418,8 +399,7 @@ while run:
                 current_room = dungeon[current_room_key]
                 enemies = current_room.enemies
                 room_key.visible = False
-                room_key.collected = False
-
+                room_key.collected = False 
 
             
         render_game()

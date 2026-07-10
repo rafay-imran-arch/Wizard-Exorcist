@@ -17,12 +17,13 @@ class Room():
 
 def build_dungeon():
 
-    from sprites import enemy, ghost, bat, slime, pumpkin
+    from sprites import enemy, ghost, bat, slime, pumpkin, oneI
 
     rooms = {
         "spawn room": Room("The spawn point", [
             slime(200,20,128,128),
-            bat(60,100,128,128)
+            bat(60,100,128,128),
+            oneI(100,100,128,128)
         ]),
 
         "the solar": Room("The abandoned solar room",[
