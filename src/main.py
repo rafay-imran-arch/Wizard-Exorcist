@@ -1,17 +1,18 @@
 import pygame
 import os 
 from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI
-from spells import spells, projectile_spell, repel_spell
+from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell
 from dungeon import build_dungeon
 
 pygame.init()
 
 
-screen_width = 800
-screen_height = 800 
+screen_width = 1280
+screen_height = 720 
 # Some essentials
 screen = pygame.display.set_mode((screen_width,screen_height))
 pygame.display.set_caption("First Draft WE")
+
 clock = pygame.time.Clock()
 score = 0
 
@@ -91,7 +92,7 @@ class spell_book():
         
 
 #function to make things appear (magically!?) 
-def render_game():
+def render_game(bat_projectiles):
 
 
     if os.path.exists(current_room.background_path):
@@ -114,9 +115,9 @@ def render_game():
     text = font.render(f'Score: {score}', 1, (255,0,0))
 
     screen.blit(text, (670, 20))
+    wizard.draw(screen)
     for e in enemies:
         e.draw(screen,wizard, offset_y=20, bar_width=50, enemies=enemies)
-    wizard.draw(screen)
     room_key.draw(screen)
     for spell in spells:
         spell.draw(screen)
@@ -124,11 +125,16 @@ def render_game():
 
     for spell in repel_spells[:]:
         spell.draw(screen)
+
+    for shoot in oneI_spells[:]:
+        shoot.draw(screen)
+
+    for spit in bat_projectiles[:]:
+        spit.draw(screen)
     
     if room_key.collected and room_key.text_timer >0:
         clear_level_1 = font.render("Level 1 Cleared", True, (0,255,128))
         screen.blit(clear_level_1, (400,400))
-
 
     pygame.display.update()
     clock.tick(30)
@@ -148,6 +154,8 @@ pygame.mixer.music.play(-1)
 font = pygame.font.SysFont('comicsans', 30, True)
 spell_limit = 5
 spells = []
+bat_projectiles = []
+oneI_spells = []
 repel_spells = []
 room_key = keys_drop()
 run = True
@@ -207,6 +215,40 @@ while run:
         
         pygame.display.update()
     
+    elif game_state == "victory":
+        screen.fill((20,10,10))
+        victory_text = font.render("Castle Purified!", True, (0,255,128))
+        score_text = font.render(f"Grand score: {score}", True, (255,255,255))
+        retry_text = font.render("Press SPACE to return to main menu", True, (150,150,150))
+
+        screen.blit(victory_text, (260,300))
+        screen.blit(score_text, (325,360))
+        screen.blit(retry_text, (230, 450))
+
+        pygame.display.update()
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE]:
+            score = 0
+            game_state = "MENU"
+
+    elif game_state == "game_over":
+        screen.fill((20,10,10))
+        over_text = font.render("The wizard has fallen GAME OVER!", True, (255,0,0))
+        score_text = font.render(f"Final score {score}", True, (255,255,255))
+        retry_text = font.render("To revive press space!", True, (150,150,150))
+
+        screen.blit(over_text, (280,300))
+        screen.blit(score_text, (320,360))
+        screen.blit(retry_text, (230, 450))
+
+        pygame.display.update()
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE]:
+            score = 0
+            game_state = "MENU"
+
     elif game_state == "PLAYING":
 
         if shoot_loop > 0:
@@ -235,7 +277,10 @@ while run:
                 else: 
                     spells.pop(spells.index(spell))
                     break  # <--- Stops processing this spell instantly
-        wizard_rect = pygame.Rect(wizard.x_pos + 10, wizard.y_pos, 100, 128)
+        wizard_rect = pygame.Rect(wizard.hit_box[0], wizard.hit_box[1], wizard.hit_box[2], wizard.hit_box[3])
+
+        if current_room.is_boss_room and not current_room.cleared:
+            pass
 
         for enemy in enemies:
             if enemy.x < 0:
@@ -251,6 +296,52 @@ while run:
             enemy.hit_box = (enemy.x, enemy.y, enemy.hit_box[2], enemy.hit_box[3])
 
             enemy_rect = pygame.Rect(enemy.hit_box[0], enemy.hit_box[1], enemy.hit_box[2], enemy.hit_box[3])
+
+            if hasattr(enemy, 'type') and enemy.type == "bat":
+                enemy.shoot_cooldown -= 1
+
+                if enemy.shoot_cooldown <= 0:
+                    dx = wizard.x_pos - enemy.x
+                    dy = wizard.y_pos - enemy.y
+
+                    if abs(dx) > abs (dy):
+                        if dx > 0:
+                            spit_dirc = "right"
+                        else:
+                            spit_dirc = "left"
+                    else:
+                        if dy > 0:
+                            spit_dirc = "downwards"
+                        else:
+                            spit_dirc = "upwards"
+
+        
+
+                    new_spit = enemy_projectile_bat(enemy.x, enemy.y, spit_dirc)
+                    bat_projectiles.append(new_spit)
+                    enemy.shoot_cooldown = enemy.max_cooldown
+
+            if hasattr(enemy, 'type') and enemy.type == "oneI":
+                enemy.shoot_cooldown -= 1
+
+                if enemy.shoot_cooldown <= 0:
+                    dx = wizard.x_pos - enemy.x 
+                    dy = wizard.y_pos - enemy.y
+                    
+                    if abs(dx) > abs (dy):
+                        if dx < 0:
+                            shoot_dirc = "left"
+                        else: 
+                            shoot_dirc = "right"
+                    else:
+                        if dy < 0:
+                            shoot_dirc = "upwards"
+                        else: 
+                            shoot_dirc = "downwards"
+                    
+                    new_shoot = oneI_spell(enemy.x+48, enemy.y+48, shoot_dirc)
+                    oneI_spells.append(new_shoot)
+                    enemy.shoot_cooldown = enemy.max_shoot_cooldown
             
             if enemy_rect.colliderect(wizard_rect):
                 if player_hit_cooldown == 0:
@@ -276,6 +367,8 @@ while run:
                             if not enemy.visible:
                                 if enemy in enemies:
                                     enemies.remove(enemy)
+                                if enemy in current_room.enemies:
+                                    current_room.enemies.remove(enemy)
                             break
             
             if enemy.visible:
@@ -287,12 +380,60 @@ while run:
             spell.update(enemies)
             if not spell.active:
                 repel_spells.remove(spell)
+
+        #oneI power code
+        for shoot in oneI_spells[:]:
+            shoot.update()
+
+            shoot_rect = pygame.Rect(shoot.x_pos, shoot.y_pos, 32,32)
+
+            if shoot_rect.colliderect(wizard_rect):
+                if player_hit_cooldown == 0:
+                    hurt_sound.play()
+                    if score > 0:
+                        score -= 2
+                    player_hit_cooldown = 30
+                shoot.active = False
+                oneI_spells.remove(shoot)
+                continue
+
+            if (shoot.x_pos < 0 or shoot.x_pos > screen_width or 
+                shoot.y_pos < 0 or shoot.y_pos > screen_height):
+                shoot.active = False
+                oneI_spells.remove(shoot)
+        
+        #Bat power code
+        for spit in bat_projectiles[:]:
+            spit.update()
+
+            spit_rect = pygame.Rect(spit.x_pos, spit.y_pos, 16,16)
+
+            if spit_rect.colliderect(wizard_rect):
+                if player_hit_cooldown == 0:
+                    hurt_sound.play()
+                    wizard.hit(1.0)
+                    if score > 0:
+                        score -= 2
+                    player_hit_cooldown = 30
+                spit.active = False
+                bat_projectiles.remove(spit)
+                continue
+            
+            if (spit.x_pos < 0 or spit.x_pos > screen_width or
+                spit.y_pos < 0 or spit.y_pos > screen_height):
+                spit.active = False
+                bat_projectiles.remove(spit)
+
         
                 
         enemies = [e for e in enemies if e.visible]
         if len(enemies) == 0 and not current_room.cleared:
             current_room.cleared = True
-            room_key.visible = True 
+
+            if current_room.is_boss_room:
+                game_state = "victory"
+            else:
+                room_key.visible = True
         
         next_room_key = None
 
@@ -329,32 +470,31 @@ while run:
                 room_key.visible = False
                 room_key.collected = True
                 room_key.text_timer = 150
-
                 
         #check key presses for controls 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             wizard.facing = "left"
             wizard.is_moving = True
-            if wizard.x_pos > 0:
+            if wizard.hit_box[0]> 0:
                 wizard.x_pos -= wizard.vel
         
         elif keys[pygame.K_RIGHT]:
             wizard.facing = "right"
             wizard.is_moving = True
-            if wizard.x_pos < screen_width - wizard.character_size[0]+ 20:
+            if wizard.hit_box[0] + wizard.hit_box[2] < screen_width :
                 wizard.x_pos += wizard.vel
 
         elif keys[pygame.K_UP]:
             wizard.facing = "upwards"
             wizard.is_moving = True 
-            if wizard.y_pos > 0:
+            if wizard.hit_box[1] > 0:
                 wizard.y_pos -= wizard.vel
 
         elif keys[pygame.K_DOWN]:
             wizard.facing = "downwards"
             wizard.is_moving = True
-            if wizard.y_pos< screen_height - wizard.character_size[1]:
+            if wizard.hit_box[1] + wizard.hit_box[3] < screen_height:
                 wizard.y_pos += wizard.vel
         else:
             wizard.is_moving = False
@@ -390,7 +530,7 @@ while run:
             if admin_mode:
                 pass
             else:
-                game_state = "MENU"
+                game_state = "game_over"
                 score = 0
                 
                 wizard.health = wizard.max_health
@@ -400,9 +540,9 @@ while run:
                 enemies = current_room.enemies
                 room_key.visible = False
                 room_key.collected = False 
-
-            
-        render_game()
+                
+                
+        render_game(bat_projectiles)
 
     
 pygame.quit()

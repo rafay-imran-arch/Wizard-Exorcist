@@ -20,7 +20,7 @@ class player():
         self.walk_count = 0
         self.is_moving = False
         self.is_jump = False
-        self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
+        self.hit_box = (self.x_pos + 32, self.y_pos + 25, 64, 90)
         self.mana = 10
         self.health = 100
         self.max_health = 100
@@ -103,7 +103,7 @@ class player():
                 self.walk_count += 1
     
         # collision hitbox
-        self.hit_box = (self.x_pos + 10, self.y_pos, 100, 128)
+        self.hit_box = (self.x_pos + 32, self.y_pos + 25, 64, 90)
         pygame.draw.rect(screen, (0,255,0), self.hit_box, 2)
 
         #Mana and Health bar
@@ -119,15 +119,11 @@ class player():
         pygame.draw.rect(screen, (40,255,40), (self.hit_box[0], self.hit_box[1]-10, health_width, 10))
 
 
-
-
     def hit(self, damage_ammount):
         if self.health > 0:
             self.health -= damage_ammount
             self.walk_count = 0
             pygame.display.update()
-       
-
 
 class enemy():
     
@@ -140,6 +136,7 @@ class enemy():
         self.max_health = max_health
         self.vel = vel
         self.damage = damage
+        
 
         #Some constants 
         self.walk_count = 0
@@ -154,6 +151,30 @@ class enemy():
             health_percentage = self.health / self.max_health
             fill_width = int(bar_width * health_percentage)
             pygame.draw.rect(screen, (128,255,200), (self.hit_box[0], self.hit_box[1]- offset_y, fill_width, 8))
+
+    def handle_seperation(self, enemies, radius=40, push_strength=2):
+        #At first I did for each enemy then I remembered inheritance so....
+        for other in enemies:
+            if other == self or not other.visible:
+                continue
+
+            distance_x = self.x - other.x
+            distance_y = self.y - other.y
+
+            if abs(distance_x) < radius and abs(distance_y) < radius:
+                if distance_x > 0:
+                    self.x += push_strength
+                elif distance_x < 0:
+                    self.x -= push_strength
+                else: 
+                    self.x += random.choice([-1,1])
+
+                if distance_y > 0:
+                    self.y += push_strength
+                elif distance_y < 0:
+                    self.y -= push_strength
+                else:
+                    self.y += random.choice([-1,1])
 
     def hit(self):
         if self.health > 0:
@@ -188,17 +209,7 @@ class ghost(enemy):
                 self.y -= self.vel
             
 
-        for other in enemies:
-            if other == self or not other.visible:
-                continue
-            distance_x = self.x - other.x
-            distance_y = self.y - other.y
-
-            if abs(distance_x) < 40 and abs(distance_y) < 40:
-                if distance_x > 0: self.x += 1
-                else: self.x -= 1
-                if distance_y > 0: self.y += 1
-                else: self.y -= 1
+            self.handle_seperation(enemies, radius=40, push_strength=2)
 
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)  
@@ -225,8 +236,12 @@ class ghost(enemy):
 
 class bat(enemy):
 
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, facing="downwards"):
         super().__init__(x,y,width,height,max_health=5,vel=2.5, damage=1.5)
+        self.shoot_cooldown = 240
+        self.type = "bat"
+        self.max_cooldown = 240
+        self.facing = facing
 
         #bat assets
         self.bat_dir = os.path.join(self.enemy_dir, "Bat")
@@ -250,18 +265,7 @@ class bat(enemy):
             elif self.y > wizard.y_pos:
                 self.y -= self.vel 
 
-        for other in enemies:
-            if other == self or not other.visible:
-                continue
-
-            distance_x = self.x - other.x
-            distance_y = self.y - other.y
-
-            if abs(distance_x) < 40 and abs(distance_y) < 40:
-                if distance_x > 0: self.x += 1
-                else: self.x -= 1
-                if distance_y > 0: self.y += 1
-                else: self.y -= 1
+        self.handle_seperation(enemies, radius=40, push_strength=2)
 
 
     
@@ -323,18 +327,7 @@ class slime(enemy):
             elif self.y > wizard.y_pos:
                 self.y -= self.vel
 
-        for other in enemies:
-            if other == self or not other.visible:
-                continue
-            
-            distance_x =  self.x - other.x
-            distance_y = self.y - other.y
-
-            if abs(distance_x) < 40 and abs(distance_y) < 40:
-                if distance_x > 0: self.x += 1
-                else: self.x -= 1
-                if distance_y > 0: self.y += 1
-                else: self.y -= 1
+            self.handle_seperation(enemies, radius=40, push_strength=2)
 
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)
@@ -387,18 +380,7 @@ class pumpkin(enemy):
             elif self.y > wizard.y_pos:
                 self.y -= self.vel
 
-        for other in enemies: 
-            if other == self or not other.visible:
-                continue
-            
-            distance_x = self.x - other.x
-            distance_y = self.x - other.y
-
-            if abs(distance_x) < 40 and abs(distance_y) < 40:
-                if distance_x > 0: self.x += 1
-                else: self.x -= 1
-                if distance_y > 0: self.y += 1
-                else: self.y -= 1
+            self.handle_seperation(enemies, radius=40, push_strength=2)
             
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)
@@ -425,9 +407,16 @@ class pumpkin(enemy):
 #Likely the boss in the dungeon stairs room (this room shall only open once all others are cleared)
 class oneI(enemy):
     
-    def __init__(self,x, y, width, height):
+    def __init__(self,x, y, width, height, facing="downwards"):
         super().__init__(x, y, width, height, max_health=60, vel=3, damage=10)
+        self.type = "oneI"
+        self.facing = facing
+        self.shoot_cooldown = 120
+        self.max_shoot_cooldown = 120
 
+
+
+        #loading the oneI-ed assets
         oneI_dir = os.path.join(self.enemy_dir, "Pyramid")
 
         master_sheet = pygame.image.load(os.path.join(oneI_dir, "Pyramid-160x144.png"))
@@ -462,22 +451,9 @@ class oneI(enemy):
                 self.y += self.vel
             elif self.y > wizard.y_pos:
                 self.y -= self.vel 
-        #avoiding enemy stacking should work but isn't
-        for other in enemies:
-            if other == self or not other.visible:
-                continue
-            distance_x = self.x - other.x
-            distance_y = self.y - other.y
-
-            if abs(distance_x) < 40 and abs(distance_y) < 40:
-                if self.x > 0: 
-                    self.x += 1
-                else: 
-                    self.x -= 1
-                if self.y > 0: 
-                    self.y += 1
-                else: 
-                    self.y -= 1
+        
+            self.handle_seperation(enemies, radius=50, push_strength=3)
+        
 
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)

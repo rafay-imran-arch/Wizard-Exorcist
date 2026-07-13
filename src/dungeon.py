@@ -12,6 +12,7 @@ class Room():
         
         self.connections = {}
         self.hidden_doors = []
+        self.is_boss_room = False
 
         self.background_path = os.path.join("src","assets",'rooms', f"{image_name}.png")
 
@@ -21,9 +22,7 @@ def build_dungeon():
 
     rooms = {
         "spawn room": Room("The spawn point", [
-            slime(200,20,128,128),
-            bat(60,100,128,128),
-            oneI(100,100,128,128)
+            oneI(244,555,128,128)
         ]),
 
         "the solar": Room("The abandoned solar room",[
@@ -77,10 +76,7 @@ def build_dungeon():
         ]),
 
         "dungeon stairs": Room('The stairs which lead to dungeon',[
-            ghost(100,200,128,128),
-            bat(400,125,128,128),
-            ghost(342,633,128,128),
-            bat(123,321,128,128)
+            oneI(700,400,128,128)
         ]),
 
         "banquet hall": Room('The banquet hall',[
@@ -159,7 +155,7 @@ def build_dungeon():
     rooms['great dining'].connections = {'east': 'east wing hallway2', 'west': 'spawn room2'}
 
     # Spawn hallway expansion 3
-    rooms['spawn room3'].connections = {'north': 'spawn room2', 'east': 'banquet hall', 'west': 'dungeon stairs'}
+    rooms['spawn room3'].connections = {'north': 'spawn room2', 'east': 'dungeon stairs', 'west': 'banquet hall'}
     rooms['banquet hall'].connections = {'east': 'spawn room3', 'west': 'west wing hallway2'}
     rooms['dungeon stairs'].connections = {'east': 'east wing hallway3', 'west': 'spawn room3'}
     rooms['princes room'].connections = {'west': 'west wing hallway3'}
@@ -195,6 +191,8 @@ def build_dungeon():
     rooms['east wing hallway1'].hidden_doors = ['south', 'north']
     rooms['east wing hallway2'].hidden_doors = ['north', 'south']
     rooms['east wing hallway3'].hidden_doors = ['north']
+
+    rooms['dungeon stairs'].is_boss_room = True 
 
     return rooms 
 

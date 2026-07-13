@@ -15,10 +15,10 @@ class spells():
         self.spell_dir = os.path.join('src', 'assets','spells')
         self.effect_dir = os.path.join('src', 'assets', 'effects', 'eff', 'PNG')
         
-
+#The projectile spell
 class projectile_spell(spells):
     def __init__(self,x_pos ,y_pos, facing):
-        super().__init__(x_pos,y_pos,facing)
+        super().__init__(x_pos, y_pos, facing)
 
         #loading the shooting spell asset
         self.shoot_spell_dir = os.path.join(self.spell_dir, 'SlowEffect', 'Frames')
@@ -29,7 +29,9 @@ class projectile_spell(spells):
 
     def draw(self, screen):
         screen.blit(self.shoot_spell, (self.x_pos,self.y_pos))
+    
 
+#Spell number 2 the repelent spell
 class repel_spell(spells):
     def __init__(self, x_pos, y_pos, facing):
         super().__init__(x_pos, y_pos, facing)
@@ -37,7 +39,7 @@ class repel_spell(spells):
         self.radius = 10
         self.max_radius = 200
         self.growth_speed = 9
-        self.push_force = 100
+        self.push_force = 15
         self.active = True
         self.walk_count = 0
 
@@ -47,36 +49,36 @@ class repel_spell(spells):
             for i in range(10)
         ]
 
-    def update(self, enemies):
-        import math
-
-        self.radius += self.growth_speed
-        if self.radius >= self.max_radius:
-            self.active = False
-        
+    def update(self, enemies): 
+        if self.active:
+            self.radius += self.growth_speed
+            if self.radius >= self.max_radius:
+                self.active = False
+                return
+            
         for enemy in enemies:
             if not enemy.visible: 
                 continue
+        
+            dist_x = enemy.x - self.x_pos
+            dist_y = enemy.y - self.y_pos
+            distance = (dist_x**2 + dist_y**2)**0.5
 
-            enemy_center_x = enemy.hit_box[0] + enemy.hit_box[2] // 2
-            enemy_center_y = enemy.hit_box[1] + enemy.hit_box[3] // 2
+            if distance <= self.radius and distance > 0:
+                push_force = 15
+            #This prevents the push in one sngluar direction (every time); to making it some what dynamic
+                if self.facing == "left":
+                    enemy.x -= push_force
+                elif self.facing == "right":
+                    enemy.x += push_force
+                elif self.facing == "upwards":
+                    enemy.y -= push_force
+                elif self.facing == "downwards":
+                    enemy.y += push_force
 
-            dx = enemy_center_x - self.x_pos
-            dy = enemy_center_y - self.y_pos 
-            distance = math.hypot(dx, dy)
 
-            repel_range = 150
-
-            if distance < repel_range and distance > 0:
-            
-                push_y = dx/ distance
-                push_x = dy/ distance
-
+           
                 
-
-                enemy.x += push_x * self.push_force
-                enemy.y += push_y * self.push_force 
-
     def draw(self, screen):
         if self.active:
 
@@ -89,3 +91,50 @@ class repel_spell(spells):
 
             screen.blit(scaled_frame, (int(self.x_pos - self.radius), int(self.y_pos - self.radius)))
 
+
+class enemy_projectile_bat(spells):
+    def __init__(self, x_pos, y_pos, facing):
+        super().__init__(x_pos, y_pos, facing)
+        self.vel = 5
+        self.active = True
+
+        self.image = pygame.Surface((16,16))
+        self.image.fill((255,0,0))
+
+    def update(self):
+        if self.facing == "left":
+            self.x_pos -= self.vel
+        elif self.facing == "right":
+            self.x_pos += self.vel
+        elif self.facing == "upwards":
+            self.y_pos -= self.vel
+        elif self.facing == "downwards":
+            self.y_pos += self.vel
+
+    def draw(self, screen):
+        if self.active:
+            screen.blit(self.image, (int(self.x_pos),int(self.y_pos)))
+
+
+class oneI_spell(spells):
+    def __init__(self,x_pos , y_pos, facing):
+        super().__init__(x_pos, y_pos, facing)
+        self.vel = 6
+        self.active = True  
+
+        self.image = pygame.Surface((32,32))
+        self.image.fill((255,237,41))
+
+    def update(self):
+        if self.facing == "left":
+            self.x_pos -= self.vel
+        elif self.facing == "right":
+            self.x_pos += self.vel
+        elif self.facing == "upwards":
+            self.y_pos -= self.vel 
+        else:
+            self.y_pos += self.vel
+
+    def draw(self, screen):
+        if self.active:
+            screen.blit(self.image, (self.x_pos, self.y_pos))
