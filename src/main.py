@@ -263,7 +263,7 @@ while run:
         if room_key.collected and room_key.text_timer > 0:
             room_key.text_timer -= 1
 
-
+        active_spells = []
         for spell in spells[:]:        
                 if (spell.x_pos < screen_width and spell.x_pos > 0) and (spell.y_pos < screen_height and spell.y_pos > 0):
                     if spell.facing == "right":
@@ -274,9 +274,9 @@ while run:
                         spell.y_pos -= spell.vel
                     elif spell.facing == 'downwards':
                         spell.y_pos += spell.vel
-                else: 
-                    spells.pop(spells.index(spell))
-                    break  # <--- Stops processing this spell instantly
+                    active_spells.append(spell)           
+        spells = active_spells
+
         wizard_rect = pygame.Rect(wizard.hit_box[0], wizard.hit_box[1], wizard.hit_box[2], wizard.hit_box[3])
 
         if current_room.is_boss_room and not current_room.cleared:
@@ -297,6 +297,7 @@ while run:
 
             enemy_rect = pygame.Rect(enemy.hit_box[0], enemy.hit_box[1], enemy.hit_box[2], enemy.hit_box[3])
 
+            #Position of bat spit
             if hasattr(enemy, 'type') and enemy.type == "bat":
                 enemy.shoot_cooldown -= 1
 
@@ -317,10 +318,11 @@ while run:
 
         
 
-                    new_spit = enemy_projectile_bat(enemy.x, enemy.y, spit_dirc)
+                    new_spit = enemy_projectile_bat(enemy.x + 56, enemy.y + 56, spit_dirc)
                     bat_projectiles.append(new_spit)
                     enemy.shoot_cooldown = enemy.max_cooldown
 
+            #position of oneI shoot
             if hasattr(enemy, 'type') and enemy.type == "oneI":
                 enemy.shoot_cooldown -= 1
 
@@ -339,9 +341,10 @@ while run:
                         else: 
                             shoot_dirc = "downwards"
                     
-                    new_shoot = oneI_spell(enemy.x+48, enemy.y+48, shoot_dirc)
+                    new_shoot = oneI_spell(enemy.x+48, enemy.y+18, shoot_dirc)
                     oneI_spells.append(new_shoot)
                     enemy.shoot_cooldown = enemy.max_shoot_cooldown
+                
             
             if enemy_rect.colliderect(wizard_rect):
                 if player_hit_cooldown == 0:
@@ -385,17 +388,19 @@ while run:
         for shoot in oneI_spells[:]:
             shoot.update()
 
-            shoot_rect = pygame.Rect(shoot.x_pos, shoot.y_pos, 32,32)
+            shoot_rect = pygame.Rect(shoot.x_pos, shoot.y_pos,16,16)
 
             if shoot_rect.colliderect(wizard_rect):
                 if player_hit_cooldown == 0:
                     hurt_sound.play()
+                    wizard.hit(4)
                     if score > 0:
-                        score -= 2
+                        score -= 4
                     player_hit_cooldown = 30
                 shoot.active = False
                 oneI_spells.remove(shoot)
                 continue
+            
 
             if (shoot.x_pos < 0 or shoot.x_pos > screen_width or 
                 shoot.y_pos < 0 or shoot.y_pos > screen_height):

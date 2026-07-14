@@ -97,9 +97,14 @@ class enemy_projectile_bat(spells):
         super().__init__(x_pos, y_pos, facing)
         self.vel = 5
         self.active = True
+        self.walkcount = 0
 
-        self.image = pygame.Surface((16,16))
-        self.image.fill((255,0,0))
+        self.bat_spit_dir = os.path.join(self.spell_dir, "BurnEffect", "Frames")
+        self.bat_spit_frames = [ pygame.transform.scale(
+            pygame.image.load(os.path.join(self.bat_spit_dir,f"BurnEffect_{i:02}.png")).convert_alpha(),
+            (96,96))
+            for i in range(16)
+        ]
 
     def update(self):
         if self.facing == "left":
@@ -113,7 +118,11 @@ class enemy_projectile_bat(spells):
 
     def draw(self, screen):
         if self.active:
-            screen.blit(self.image, (int(self.x_pos),int(self.y_pos)))
+            
+            frame_index = (self.walkcount // 4) % len(self.bat_spit_frames)
+            current_index = self.bat_spit_frames[frame_index]
+            self.walkcount += 1
+            screen.blit(current_index, (self.x_pos, self.y_pos))
 
 
 class oneI_spell(spells):
@@ -121,9 +130,14 @@ class oneI_spell(spells):
         super().__init__(x_pos, y_pos, facing)
         self.vel = 6
         self.active = True  
-
-        self.image = pygame.Surface((32,32))
-        self.image.fill((255,237,41))
+        self.walkcount = 0
+        #oneI spell asset loading
+        self.oneI_shoot_dir = os.path.join(self.effect_dir, "Magic Bursts", "round_light_burst_001", "round_light_burst_001_small_yellow")
+        self.oneI_shoot_frames = [ pygame.transform.scale(
+            pygame.image.load(os.path.join(self.oneI_shoot_dir, f"frame{i:04}.png")),
+            (64,64)
+        ) for i in range(9)
+        ]
 
     def update(self):
         if self.facing == "left":
@@ -137,4 +151,8 @@ class oneI_spell(spells):
 
     def draw(self, screen):
         if self.active:
-            screen.blit(self.image, (self.x_pos, self.y_pos))
+            
+            frame_index = (self.walkcount // 2) % len(self.oneI_shoot_frames)
+            current_frame = self.oneI_shoot_frames[frame_index]
+            self.walkcount += 1
+            screen.blit(current_frame, (self.x_pos, self.y_pos))
