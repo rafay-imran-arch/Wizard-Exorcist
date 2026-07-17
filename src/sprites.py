@@ -413,6 +413,8 @@ class oneI(enemy):
         self.facing = facing
         self.shoot_cooldown = 120
         self.max_shoot_cooldown = 120
+        self.beam_cooldown = 300
+        self.radial_cooldown = 240
 
 
 

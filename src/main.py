@@ -1,7 +1,7 @@
 import pygame
 import os 
 from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI
-from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell
+from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial
 from dungeon import build_dungeon
 
 pygame.init()
@@ -115,22 +115,32 @@ def render_game(bat_projectiles):
     text = font.render(f'Score: {score}', 1, (255,0,0))
 
     screen.blit(text, (670, 20))
-    wizard.draw(screen)
+    wizard.draw(screen) # drawing wizard
+
+    #drawing enemy
     for e in enemies:
         e.draw(screen,wizard, offset_y=20, bar_width=50, enemies=enemies)
     room_key.draw(screen)
     for spell in spells:
         spell.draw(screen)
 
+    #drawing all wizards spells
 
     for spell in repel_spells[:]:
         spell.draw(screen)
+
+    # drawing all enemy spells
+    for blast in oneI_radial_blast[:]:
+        blast.draw(screen)
 
     for shoot in oneI_spells[:]:
         shoot.draw(screen)
 
     for spit in bat_projectiles[:]:
         spit.draw(screen)
+
+    for beam in oneI_beam_spells[:]:
+        beam.draw(screen)
     
     if room_key.collected and room_key.text_timer >0:
         clear_level_1 = font.render("Level 1 Cleared", True, (0,255,128))
@@ -153,16 +163,19 @@ pygame.mixer.music.play(-1)
 
 font = pygame.font.SysFont('comicsans', 30, True)
 spell_limit = 5
-spells = []
-bat_projectiles = []
-oneI_spells = []
-repel_spells = []
+
 room_key = keys_drop()
 run = True
 shoot_loop = 0
 player_hit_cooldown = 0
 
-
+#power list
+spells = []
+bat_projectiles = []
+oneI_spells = []
+oneI_beam_spells = []
+repel_spells = []
+oneI_radial_blast = []
 
 dungeon = build_dungeon()
 dungeon_stairs_room_key = None # Add this later a cool type looking key which appears only once you kill all the other enemies
@@ -322,6 +335,7 @@ while run:
                     bat_projectiles.append(new_spit)
                     enemy.shoot_cooldown = enemy.max_cooldown
 
+
             #position of oneI shoot
             if hasattr(enemy, 'type') and enemy.type == "oneI":
                 enemy.shoot_cooldown -= 1
@@ -344,7 +358,12 @@ while run:
                     new_shoot = oneI_spell(enemy.x+48, enemy.y+18, shoot_dirc)
                     oneI_spells.append(new_shoot)
                     enemy.shoot_cooldown = enemy.max_shoot_cooldown
-                
+
+                #oneI beam 
+                enemy.beam_cooldown -= 1
+                if enemy.beam_cooldown <= 0:
+                    oneI_beam_spells.append(oneI_beam(screen_width, screen_height))
+                    enemy.beam_cooldown = 300       
             
             if enemy_rect.colliderect(wizard_rect):
                 if player_hit_cooldown == 0:
@@ -378,13 +397,24 @@ while run:
                 for spell in spells[:]:
                     spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
 
-        
+            # oneI radial blast 
+            if hasattr(enemy, 'type') and enemy.type == "oneI":
+                if enemy.radial_cooldown > 0:
+                    enemy.radial_cooldown -= 1
+                else:
+                    new_burst = oneI_radial_burst(enemy.x +32, enemy.y + 32, num_shoots=12)
+                    oneI_radial_blast.append(new_burst)
+                    enemy.radial_cooldown = 240
+
+
+        # Wizard spells 
+
         for spell in repel_spells[:]:
             spell.update(enemies)
             if not spell.active:
                 repel_spells.remove(spell)
 
-        #oneI power code
+        #oneI shoot collision code
         for shoot in oneI_spells[:]:
             shoot.update()
 
@@ -401,13 +431,45 @@ while run:
                 oneI_spells.remove(shoot)
                 continue
             
-
-            if (shoot.x_pos < 0 or shoot.x_pos > screen_width or 
+            
+            if (shoot.x_pos < 0 or shoot.x_pos > screen_width or
                 shoot.y_pos < 0 or shoot.y_pos > screen_height):
                 shoot.active = False
                 oneI_spells.remove(shoot)
         
-        #Bat power code
+        #oneI beam collision code
+        for beam in oneI_beam_spells[:]:
+            cooldown_val = beam.update(wizard_rect, wizard, player_hit_cooldown, hurt_sound)
+            if cooldown_val > 0:
+                player_hit_cooldown = cooldown_val 
+                if score > 0:
+                    score -= 3
+            if not beam.active:
+                oneI_beam_spells.remove(beam)
+
+        #oneI radial burst code 
+        for blast in oneI_radial_blast[:]:
+            
+            if isinstance(blast, oneI_radial_burst):
+                blast.update(oneI_radial_blast, screen_width, screen_height)
+            elif isinstance(blast, oneI_radial):
+                blast.update(screen_width, screen_height)
+                
+                blast_rect = pygame.Rect(blast.x_pos-4, blast.y_pos -4, 8,8)
+                if blast_rect.colliderect(wizard_rect) and player_hit_cooldown == 0:
+                    hurt_sound.play()
+                    wizard.hit(9)
+                    if score > 0:
+                        score -= 5
+                    blast.active = False 
+            if not blast.active:
+                oneI_radial_blast.remove(blast)
+
+
+
+
+
+        #Bat spit collision code
         for spit in bat_projectiles[:]:
             spit.update()
 
@@ -429,7 +491,7 @@ while run:
                 spit.active = False
                 bat_projectiles.remove(spit)
 
-        
+    
                 
         enemies = [e for e in enemies if e.visible]
         if len(enemies) == 0 and not current_room.cleared:
@@ -478,25 +540,25 @@ while run:
                 
         #check key presses for controls 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             wizard.facing = "left"
             wizard.is_moving = True
             if wizard.hit_box[0]> 0:
                 wizard.x_pos -= wizard.vel
         
-        elif keys[pygame.K_RIGHT]:
+        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             wizard.facing = "right"
             wizard.is_moving = True
             if wizard.hit_box[0] + wizard.hit_box[2] < screen_width :
                 wizard.x_pos += wizard.vel
 
-        elif keys[pygame.K_UP]:
+        elif keys[pygame.K_UP] or keys[pygame.K_w]:
             wizard.facing = "upwards"
             wizard.is_moving = True 
             if wizard.hit_box[1] > 0:
                 wizard.y_pos -= wizard.vel
 
-        elif keys[pygame.K_DOWN]:
+        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
             wizard.facing = "downwards"
             wizard.is_moving = True
             if wizard.hit_box[1] + wizard.hit_box[3] < screen_height:
@@ -504,7 +566,7 @@ while run:
         else:
             wizard.is_moving = False
         
-        if keys[pygame.K_COMMA]:
+        if keys[pygame.K_PERIOD]:
             recharge_sound.play()
             if wizard.mana < 10:
                 wizard.mana += 1
@@ -523,7 +585,7 @@ while run:
                 new_repel = repel_spell(center_x, center_y, wizard.facing)
                 repel_spells.append(new_repel)
         
-        if keys[pygame.K_SPACE] and shoot_loop == 0 and not keys[pygame.K_COMMA]:
+        if (keys[pygame.K_SPACE] or keys[pygame.K_COMMA]) and shoot_loop == 0 and not keys[pygame.K_COMMA]:
             if wizard.mana > 0 and len(spells) < spell_limit:
                 wizard.mana -= 1
                 spell_sound.play()
@@ -544,7 +606,7 @@ while run:
                 current_room = dungeon[current_room_key]
                 enemies = current_room.enemies
                 room_key.visible = False
-                room_key.collected = False 
+                room_key.collected = False  
                 
                 
         render_game(bat_projectiles)

@@ -1,5 +1,7 @@
 import os
 import pygame
+import math 
+import random
 
 pygame.init()
 
@@ -156,3 +158,155 @@ class oneI_spell(spells):
             current_frame = self.oneI_shoot_frames[frame_index]
             self.walkcount += 1
             screen.blit(current_frame, (self.x_pos, self.y_pos))
+
+class oneI_beam(spells):
+    def __init__(self, screen_width, screen_height):
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.active = True
+        self.track_speed = 6
+        self.orientation = random.choice(['horizontal', 'vertical'])
+        
+        if self.orientation == 'horizontal':
+            self.x = 0
+            self.y = random.randint(50, screen_height - 50)
+            self.rect = pygame.Rect(0, self.y, screen_width, 24)
+        else:
+            self.x = random.randint(50, screen_width -50)
+            self.y = 0
+            self.rect = pygame.Rect(self.x, 0, 24, screen_height)
+
+        self.warning_timer = 20
+        self.blast_timer = 200
+        
+    def update(self, wizard_rect, wizard, player_hit_cooldown, hurt_sound):
+        
+        
+        wizard_center_x = wizard_rect.centerx
+        wizard_center_y = wizard_rect.centery
+        
+        if self.orientation == "horizontal":
+            target_y  = wizard_center_y - 12
+            if abs(self.y - target_y) < self.track_speed:
+                self.y = target_y
+            elif self.y < target_y:
+                self.y += self.track_speed
+            elif self.y > target_y:
+                self.y -= self.track_speed
+            
+
+            self.rect.y = self.y
+        else:
+            target_x = wizard_center_x - 12
+            if abs (self.x -target_x) < self.track_speed:
+                self.x = target_x
+            elif self.x < target_x:
+                self.x += self.track_speed
+            elif self.x > target_x:
+                self.x -= self.track_speed
+            
+            self.rect.x = self.x 
+
+        if self.warning_timer > 0:
+            self.warning_timer -= 1
+        elif self.blast_timer > 0:
+            self.blast_timer -= 1
+        
+            
+            if self.rect.colliderect(wizard_rect) and (player_hit_cooldown == 0):
+                hurt_sound.play()
+                wizard.hit(4)
+                self.active = False
+                return 30
+            
+            if self.blast_timer <= 0:
+                self.active = False
+        return 0 
+    
+    def draw(self, screen):
+        if not self.active:
+            return 
+        
+        if self.warning_timer > 0:
+            if self.orientation == 'horizontal':
+                pygame.draw.line(screen, (110,123,32), (0, self.y + 12), (self.screen_width, self.y + 12), 2)
+            else:
+                pygame.draw.line(screen, (110,123,32), (self.x+12, 0), (self.x+12, self.screen_height), 2)
+        elif self.blast_timer > 0:
+            pygame.draw.rect(screen, (255, 100, 255), self.rect)
+            if self.orientation == 'horizontal':
+                pygame.draw.line(screen, (255,255,255), (0, self.y + 12), (self.screen_width, self.y +12), 14)
+            else:
+                pygame.draw.line(screen, (255,255,255), (self.x +12, 0), (self.x + 12, self.screen_height), 6)
+
+
+class oneI_radial(spells):
+    def __init__(self, x_pos, y_pos, angle):
+        super().__init__(x_pos, y_pos, 'radial')
+        self.vel = 5
+        self.angle = angle 
+        self.active = True 
+        self.radius = 8
+
+        self.dx = math.cos(self.angle) * self.vel
+        self.dy = math.sin(self.angle) * self.vel 
+
+    def update(self, screen_width, screen_height):
+        
+        self.x_pos += self.dx 
+        self.y_pos += self.dy
+
+        if (self.x_pos < -50 or self.x_pos > screen_width + 50 or
+            self.y_pos < -50 or self.y_pos > screen_height +50):
+            self.active = False
+
+    def draw(self, screen):
+        if self.active:
+            pygame.draw.circle(screen, (255,255,255), (int(self.x_pos), int(self.y_pos)), self.radius)
+            pygame.draw.circle(screen, (255,100,50), (int(self.x_pos), int(self.y_pos)), self.radius - 3)
+
+class oneI_radial_burst(spells):
+    def __init__(self, x_pos, y_pos, num_shoots=8):
+        super().__init__(x_pos, y_pos, "none")
+        self.active = True
+        self.num_shoots = num_shoots
+
+        self.current_ring_radius = 5
+        self.max_ring_radius = 60
+        self.expansion_speed = 3
+        self.has_burst = False
+
+    def update(self, active_projectile_list, screen_width, screen_height):
+        if not self.active: 
+            return  
+    
+        if self.current_ring_radius < self.max_ring_radius:
+            self.current_ring_radius += self.expansion_speed
+        elif not self.has_burst:
+            self.has_burst = True 
+
+            for i in range(self.num_shoots):
+                angle = (2 * math.pi / self.num_shoots) * i
+                bullet = oneI_radial(self.x_pos, self.y_pos, angle)
+                active_projectile_list.append(bullet)
+            
+            self.active = False
+    
+    def draw(self, screen):
+        if not self.active and self.has_burst:
+            return
+        
+        raw_intensity = int((self.current_ring_radius / self.max_ring_radius) * 255)
+        color_intensity = max(0, min(255, raw_intensity))
+        ring_color = (255, 100, color_intensity)
+
+        pygame.draw.circle(
+            screen, 
+            ring_color,
+            (int(self.x_pos),int(self.y_pos)),
+            int(self.current_ring_radius),
+            2
+        )
+
+        pygame.draw.circle(screen, (255,50,50), (int(self.x_pos), int(self.y_pos)), 4)
+        
