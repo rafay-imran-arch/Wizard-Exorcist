@@ -293,9 +293,14 @@ class bat(enemy):
 
 class slime(enemy):
 
-    def __init__(self,x, y, width, height):
-        super().__init__(x, y, width, height, max_health=15, vel=2.2, damage=4.5) 
-
+    def __init__(self,x, y, width, height, is_small=False):
+        self.is_small = is_small
+        if self.is_small:
+            super().__init__(x, y, width, height, max_health=5, vel=3.5, damage=2)
+            self.type = 'small_slime'
+        else:
+            super().__init__(x, y, width, height, max_health=15, vel=2.2, damage=4.5)
+            self.type = 'slime'
         #loading slime assets
         slime_dir = os.path.join(self.enemy_dir, 'Slime')
 
@@ -313,7 +318,10 @@ class slime(enemy):
             frame = master_sheet.subsurface(pygame.Rect(x_pixel, y_pixel, 64, 64))
             
             # Scale it up to 128x128 so it matches your other enemies!
-            self.slime_frames.append(pygame.transform.scale(frame, (128, 128)))
+            if self.is_small:
+                self.slime_frames.append(pygame.transform.scale(frame, (64, 64)))
+            else:
+                self.slime_frames.append(pygame.transform.scale(frame, (128,128)))
             
     def move(self,wizard,enemies):
         if self.visible:
@@ -327,7 +335,8 @@ class slime(enemy):
             elif self.y > wizard.y_pos:
                 self.y -= self.vel
 
-            self.handle_seperation(enemies, radius=40, push_strength=2)
+        sep_radius = 20 if self.is_small else 40
+        self.handle_seperation(enemies, radius=sep_radius, push_strength=2)
 
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)
@@ -339,8 +348,8 @@ class slime(enemy):
             self.walk_count += 1
             screen.blit(current_frame, (self.x, self.y))
 
-            pad_x = 20
-            pad_y = 25
+            pad_x = 10 if self.is_small else 20
+            pad_y = 13 if self.is_small else 25
             hit_x = self.x + pad_x 
             hit_y = self.y + pad_y + 15
             hit_w = self.width - (2 * pad_x)

@@ -387,6 +387,15 @@ while run:
                                 spells.remove(spell)
 
                             if not enemy.visible:
+                                #small slime spawn from big one's death
+                                if hasattr(enemy, 'type') and enemy.type == 'slime':
+                                    slime_a = slime(enemy.x - 20, enemy.y, 64, 64, is_small=True)
+                                    slime_b = slime(enemy.x + 20, enemy.y, 64, 64, is_small=True)
+                                    enemies.append(slime_a)
+                                    enemies.append(slime_b)
+                                    current_room.enemies.append(slime_a)
+                                    current_room.enemies.append(slime_b)
+
                                 if enemy in enemies:
                                     enemies.remove(enemy)
                                 if enemy in current_room.enemies:
@@ -472,10 +481,6 @@ while run:
             if not blast.active:
                 oneI_radial_blast.remove(blast)
 
-
-
-
-
         #Bat spit collision code
         for spit in bat_projectiles[:]:
             spit.update()
@@ -527,7 +532,6 @@ while run:
                 next_room_key = current_room.connections['south']
                 wizard.y_pos = door_depth + 10
 
-
         if next_room_key:
             current_room_key = next_room_key
             current_room = dungeon[current_room_key]
@@ -536,7 +540,7 @@ while run:
             if not current_room.cleared:
                 room_key.visible = False
                 room_key.collected = False
-
+                
         if room_key.visible and not room_key.collected:
             if  wizard_rect.colliderect(room_key.rect):
                 score += 10

@@ -22,7 +22,7 @@ def build_dungeon():
 
     rooms = {
         "spawn room": Room("The spawn point", [
-            oneI(244,555,128,128)
+            slime(244,555,128,128)
         ]),
 
         "the solar": Room("The abandoned solar room",[
