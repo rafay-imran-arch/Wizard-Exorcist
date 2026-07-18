@@ -358,13 +358,13 @@ while run:
                     new_shoot = oneI_spell(enemy.x+48, enemy.y+18, shoot_dirc)
                     oneI_spells.append(new_shoot)
                     enemy.shoot_cooldown = enemy.max_shoot_cooldown
-
+                enemy.beam_cooldown -= 1
                 #oneI beam 
                 enemy.beam_cooldown -= 1
                 if enemy.beam_cooldown <= 0:
                     oneI_beam_spells.append(oneI_beam(screen_width, screen_height))
                     enemy.beam_cooldown = 300       
-            
+    
             if enemy_rect.colliderect(wizard_rect):
                 if player_hit_cooldown == 0:
                     hurt_sound.play()
@@ -451,7 +451,14 @@ while run:
         for blast in oneI_radial_blast[:]:
             
             if isinstance(blast, oneI_radial_burst):
-                blast.update(oneI_radial_blast, screen_width, screen_height)
+                casting_enemy = None
+                for e in enemies:
+                    if hasattr(e, "type") and e.type == "oneI":
+                        if abs((e.x + 32) - blast.x_pos) < 50 and abs((e.y + 32) - blast.y_pos) < 50:
+                            casting_enemy = e  
+                            break
+                blast.update(oneI_radial_blast, screen_width, screen_height, casting_enemy)
+
             elif isinstance(blast, oneI_radial):
                 blast.update(screen_width, screen_height)
                 
@@ -585,13 +592,13 @@ while run:
                 new_repel = repel_spell(center_x, center_y, wizard.facing)
                 repel_spells.append(new_repel)
         
-        if (keys[pygame.K_SPACE] or keys[pygame.K_COMMA]) and shoot_loop == 0 and not keys[pygame.K_COMMA]:
+        if (keys[pygame.K_SPACE] or keys[pygame.K_COMMA]) and shoot_loop == 0 and not keys[pygame.K_PERIOD]:
             if wizard.mana > 0 and len(spells) < spell_limit:
                 wizard.mana -= 1
                 spell_sound.play()
                 spells.append(projectile_spell(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
             shoot_loop = 1  
-
+            
 
         if wizard.health <= 0:
             if admin_mode:

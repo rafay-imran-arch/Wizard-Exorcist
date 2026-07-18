@@ -52,34 +52,27 @@ class repel_spell(spells):
         ]
 
     def update(self, enemies): 
-        if self.active:
+        if self.active: 
             self.radius += self.growth_speed
             if self.radius >= self.max_radius:
                 self.active = False
                 return
-            
-        for enemy in enemies:
-            if not enemy.visible: 
-                continue
         
+        for enemy in enemies:
+            if not enemy.visible:
+                continue
             dist_x = enemy.x - self.x_pos
             dist_y = enemy.y - self.y_pos
-            distance = (dist_x**2 + dist_y**2)**0.5
+            distance = (dist_x**2 + dist_y**2) ** 0.5
 
             if distance <= self.radius and distance > 0:
                 push_force = 15
-            #This prevents the push in one sngluar direction (every time); to making it some what dynamic
-                if self.facing == "left":
-                    enemy.x -= push_force
-                elif self.facing == "right":
-                    enemy.x += push_force
-                elif self.facing == "upwards":
-                    enemy.y -= push_force
-                elif self.facing == "downwards":
-                    enemy.y += push_force
 
+                dir_x = dist_x / distance
+                dir_y = dist_y / distance 
 
-           
+                enemy.x += dir_x * push_force
+                enemy.y += dir_y * push_force 
                 
     def draw(self, screen):
         if self.active:
@@ -205,7 +198,7 @@ class oneI_beam(spells):
             elif self.x > target_x:
                 self.x -= self.track_speed
             
-            self.rect.x = self.x 
+            self.rect.x = self.x
 
         if self.warning_timer > 0:
             self.warning_timer -= 1
@@ -229,15 +222,15 @@ class oneI_beam(spells):
         
         if self.warning_timer > 0:
             if self.orientation == 'horizontal':
-                pygame.draw.line(screen, (110,123,32), (0, self.y + 12), (self.screen_width, self.y + 12), 2)
+                pygame.draw.line(screen, (110,123,32), (0, self.rect.centery), (self.screen_width, self.rect.centery), 2)
             else:
-                pygame.draw.line(screen, (110,123,32), (self.x+12, 0), (self.x+12, self.screen_height), 2)
+                pygame.draw.line(screen, (110,123,32), (self.rect.centerx, 0), (self.rect.centerx, self.screen_height), 2)
         elif self.blast_timer > 0:
             pygame.draw.rect(screen, (255, 100, 255), self.rect)
             if self.orientation == 'horizontal':
-                pygame.draw.line(screen, (255,255,255), (0, self.y + 12), (self.screen_width, self.y +12), 14)
+                pygame.draw.line(screen, (255,255,255), (0, self.rect.centery), (self.screen_width, self.rect.centery), 14)
             else:
-                pygame.draw.line(screen, (255,255,255), (self.x +12, 0), (self.x + 12, self.screen_height), 6)
+                pygame.draw.line(screen, (255,255,255), (self.rect.centerx, 0), (self.rect.centerx, self.screen_height), 6)
 
 
 class oneI_radial(spells):
@@ -270,16 +263,39 @@ class oneI_radial_burst(spells):
         super().__init__(x_pos, y_pos, "none")
         self.active = True
         self.num_shoots = num_shoots
+        self.is_charging = True 
+        self.charge_timer = 40
+        self.walk_count = 0
+
+        self.oneI_radial_dir = os.path.join(self.effect_dir, "Impacts", "symmetrical_impact_003", "symmetrical_impact_003_small_yellow")
+        self.oneI_radial_frames = [ pygame.transform.scale(
+            pygame.image.load(os.path.join(self.oneI_radial_dir, f"frame{i:04}.png")).convert_alpha(),
+            (128,128)) for i in range(7)
+        ]
+
+
 
         self.current_ring_radius = 5
         self.max_ring_radius = 60
         self.expansion_speed = 3
         self.has_burst = False
 
-    def update(self, active_projectile_list, screen_width, screen_height):
+    def update(self, oneI_radial_blast, screen_width, screen_height, enemy_instance=None):
         if not self.active: 
             return  
     
+        if self.is_charging:
+            if enemy_instance: 
+                enemy_instance.x = self.x_pos
+                enemy_instance.y = self.y_pos
+
+            self.charge_timer -= 1
+            if self.charge_timer <= 0:
+                self.is_charging = False
+            return 
+
+
+
         if self.current_ring_radius < self.max_ring_radius:
             self.current_ring_radius += self.expansion_speed
         elif not self.has_burst:
@@ -288,7 +304,7 @@ class oneI_radial_burst(spells):
             for i in range(self.num_shoots):
                 angle = (2 * math.pi / self.num_shoots) * i
                 bullet = oneI_radial(self.x_pos, self.y_pos, angle)
-                active_projectile_list.append(bullet)
+                oneI_radial_blast.append(bullet)
             
             self.active = False
     
@@ -296,6 +312,15 @@ class oneI_radial_burst(spells):
         if not self.active and self.has_burst:
             return
         
+        if self.is_charging:
+            frame_index = (self.walk_count // 2) % len(self.oneI_radial_frames)
+            current_frame = self.oneI_radial_frames[frame_index]
+            self.walk_count += 1
+
+            screen.blit(current_frame, (int(self.x_pos-48) + 36, int(self.y_pos - 48) + 36))
+            return 
+
+
         raw_intensity = int((self.current_ring_radius / self.max_ring_radius) * 255)
         color_intensity = max(0, min(255, raw_intensity))
         ring_color = (255, 100, color_intensity)
@@ -309,4 +334,3 @@ class oneI_radial_burst(spells):
         )
 
         pygame.draw.circle(screen, (255,50,50), (int(self.x_pos), int(self.y_pos)), 4)
-        
