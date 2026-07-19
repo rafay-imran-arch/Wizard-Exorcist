@@ -324,15 +324,22 @@ class slime(enemy):
                 self.slime_frames.append(pygame.transform.scale(frame, (128,128)))
             
     def move(self,wizard,enemies):
+        wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
+        wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
+        
+        current_size = 64 if self.is_small else 128
+        slime_center_x = self.x + current_size // 2
+        slime_center_y = self.y + current_size // 2
+
         if self.visible:
-            if self.x < wizard.x_pos:
+            if slime_center_x < wizard_center_x:
                 self.x += self.vel
-            elif self.x > wizard.x_pos:
+            elif slime_center_x > wizard_center_x:
                 self.x -= self.vel
             
-            if self.y < wizard.y_pos:
+            if slime_center_y < wizard_center_y:
                 self.y += self.vel
-            elif self.y > wizard.y_pos:
+            elif slime_center_y > wizard_center_y:
                 self.y -= self.vel
 
         sep_radius = 20 if self.is_small else 40
@@ -388,7 +395,7 @@ class pumpkin(enemy):
                 self.y += self.vel
             elif self.y > wizard.y_pos:
                 self.y -= self.vel
-
+    
             self.handle_seperation(enemies, radius=40, push_strength=2)
             
     def draw(self, screen, wizard, offset_y, bar_width, enemies):

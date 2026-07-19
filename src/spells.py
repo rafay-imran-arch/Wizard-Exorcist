@@ -222,11 +222,11 @@ class oneI_beam(spells):
         
         if self.warning_timer > 0:
             if self.orientation == 'horizontal':
-                pygame.draw.line(screen, (110,123,32), (0, self.rect.centery), (self.screen_width, self.rect.centery), 2)
+                pygame.draw.line(screen, (255,222,33), (0, self.rect.centery), (self.screen_width, self.rect.centery), 2)
             else:
-                pygame.draw.line(screen, (110,123,32), (self.rect.centerx, 0), (self.rect.centerx, self.screen_height), 2)
+                pygame.draw.line(screen, (255,255,197), (self.rect.centerx, 0), (self.rect.centerx, self.screen_height), 2)
         elif self.blast_timer > 0:
-            pygame.draw.rect(screen, (255, 100, 255), self.rect)
+            pygame.draw.rect(screen, (255, 255, 0), self.rect)
             if self.orientation == 'horizontal':
                 pygame.draw.line(screen, (255,255,255), (0, self.rect.centery), (self.screen_width, self.rect.centery), 14)
             else:
@@ -256,7 +256,7 @@ class oneI_radial(spells):
     def draw(self, screen):
         if self.active:
             pygame.draw.circle(screen, (255,255,255), (int(self.x_pos), int(self.y_pos)), self.radius)
-            pygame.draw.circle(screen, (255,100,50), (int(self.x_pos), int(self.y_pos)), self.radius - 3)
+            pygame.draw.circle(screen, (255,255,143), (int(self.x_pos), int(self.y_pos)), self.radius - 3)
 
 class oneI_radial_burst(spells):
     def __init__(self, x_pos, y_pos, num_shoots=8):
@@ -323,7 +323,7 @@ class oneI_radial_burst(spells):
 
         raw_intensity = int((self.current_ring_radius / self.max_ring_radius) * 255)
         color_intensity = max(0, min(255, raw_intensity))
-        ring_color = (255, 100, color_intensity)
+        ring_color = (255, 238, color_intensity)
 
         pygame.draw.circle(
             screen, 
@@ -333,4 +333,4 @@ class oneI_radial_burst(spells):
             2
         )
 
-        pygame.draw.circle(screen, (255,50,50), (int(self.x_pos), int(self.y_pos)), 4)
+        pygame.draw.circle(screen, (255,255,197), (int(self.x_pos), int(self.y_pos)), 4)

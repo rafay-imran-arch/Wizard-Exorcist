@@ -414,9 +414,9 @@ while run:
                     new_burst = oneI_radial_burst(enemy.x +32, enemy.y + 32, num_shoots=12)
                     oneI_radial_blast.append(new_burst)
                     enemy.radial_cooldown = 240
+                    
 
-
-        # Wizard spells 
+        # Wizard repel spell
 
         for spell in repel_spells[:]:
             spell.update(enemies)
