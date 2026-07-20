@@ -423,12 +423,11 @@ while run:
             if not spell.active:
                 repel_spells.remove(spell)
 
-        #oneI shoot collision code
+        #oneI shoot collision code 
         for shoot in oneI_spells[:]:
-            shoot.update()
-
-            shoot_rect = pygame.Rect(shoot.x_pos, shoot.y_pos,16,16)
-
+            shoot.update()    
+           
+            shoot_rect = pygame.Rect(shoot.x_pos, shoot.y_pos, 16, 16)
             if shoot_rect.colliderect(wizard_rect):
                 if player_hit_cooldown == 0:
                     hurt_sound.play()
@@ -440,11 +439,11 @@ while run:
                 oneI_spells.remove(shoot)
                 continue
             
-            
             if (shoot.x_pos < 0 or shoot.x_pos > screen_width or
                 shoot.y_pos < 0 or shoot.y_pos > screen_height):
                 shoot.active = False
                 oneI_spells.remove(shoot)
+            
         
         #oneI beam collision code
         for beam in oneI_beam_spells[:]:

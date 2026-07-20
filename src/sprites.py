@@ -117,7 +117,7 @@ class player():
         if health_width < 0:
             health_width = 0
         pygame.draw.rect(screen, (40,255,40), (self.hit_box[0], self.hit_box[1]-10, health_width, 10))
-
+    
 
     def hit(self, damage_ammount):
         if self.health > 0:
@@ -198,16 +198,22 @@ class ghost(enemy):
         ]
 
     def move(self, wizard, enemies):
+        wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
+        wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
+
+        ghost_center_x = self.hit_box[0] + self.hit_box[2] // 2
+        ghost_center_y = self.hit_box[1] + self.hit_box[3] // 2
+
         if self.visible:
-            if self.x < wizard.x_pos:
+            if ghost_center_x < wizard_center_x:
                 self.x += self.vel
-            elif self.x >  wizard.x_pos:
-                self.x -= self.vel
-            if self.y < wizard.y_pos:
+            elif ghost_center_x > wizard_center_x:
+                self.x -= self.vel 
+
+            if ghost_center_y < wizard_center_y:
                 self.y += self.vel
-            elif self.y > wizard.y_pos:
+            elif ghost_center_y > wizard_center_y:
                 self.y -= self.vel
-            
 
             self.handle_seperation(enemies, radius=40, push_strength=2)
 
@@ -254,15 +260,21 @@ class bat(enemy):
         ]
 
     def move(self, wizard, enemies):
-        if self.visible:
-            if self.x < wizard.x_pos:
-                self.x += self.vel
-            elif self.x > wizard.x_pos:
-                self.x -= self.vel
+        wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
+        wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
 
-            if self.y < wizard.y_pos:
+        bat_center_x = self.hit_box[0] + self.hit_box[2] // 2
+        bat_center_y = self.hit_box[1] + self.hit_box[3] // 2
+
+        if self.visible:
+            if self.x < wizard_center_x:
+                self.x += self.vel
+            elif self.x > wizard_center_x:
+                self.x -= self.vel 
+
+            if self.y < wizard_center_y:
                 self.y += self.vel
-            elif self.y > wizard.y_pos:
+            elif self.y > wizard_center_y:
                 self.y -= self.vel 
 
         self.handle_seperation(enemies, radius=40, push_strength=2)
@@ -386,15 +398,22 @@ class pumpkin(enemy):
         ]
 
     def move(self, wizard, enemies):
+        wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
+        wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
+
+        pumpkin_center_x = self.hit_box[0] + self.hit_box[2] // 2
+        pumpkin_center_y = self.hit_box[1] + self.hit_box[3] // 2
+
         if self.visible: 
-            if self.x < wizard.x_pos:
-                self.x += self.vel
-            elif self.x > wizard.x_pos:
+            if pumpkin_center_x > wizard_center_x:
                 self.x -= self.vel
-            if self.y < wizard.y_pos:
-                self.y += self.vel
-            elif self.y > wizard.y_pos:
-                self.y -= self.vel
+            elif pumpkin_center_x < wizard_center_x:
+                self.x += self.vel 
+            
+            if pumpkin_center_y > wizard_center_y:
+                self.y -= self.vel 
+            elif pumpkin_center_x < wizard_center_y:
+                self.y += self.vel 
     
             self.handle_seperation(enemies, radius=40, push_strength=2)
             
@@ -460,16 +479,24 @@ class oneI(enemy):
         self.oneI_frames = self.oneI_frames[:25]
 
     def move(self, wizard, enemies):
+
+        wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
+        wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
+
+        oneI_center_x = self.hit_box[0] + self.hit_box[2] // 2
+        oneI_center_y = self.hit_box[1] + self.hit_box[3] // 2
+
         if self.visible: 
-            if self.x < wizard.x_pos: 
+            if oneI_center_x < wizard_center_x:
                 self.x += self.vel
-            elif self.x > wizard.x_pos:
+            elif oneI_center_y > wizard_center_x:
                 self.x -= self.vel
-            if self.y < wizard.y_pos:
-                self.y += self.vel
-            elif self.y > wizard.y_pos:
+
+            if oneI_center_y < wizard_center_y:
+                self.y += self.vel 
+            elif oneI_center_x > wizard_center_y:
                 self.y -= self.vel 
-        
+
             self.handle_seperation(enemies, radius=50, push_strength=3)
         
 
