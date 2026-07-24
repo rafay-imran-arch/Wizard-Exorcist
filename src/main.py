@@ -125,8 +125,7 @@ def render_game(bat_projectiles):
         locked_msg = font.render("Boss Door Sealed! Clear all rooms first.", True, (255, 50, 50))
         screen.blit(locked_msg, (screen_width // 2 - locked_msg.get_width() // 2, 50))
 
-    text = font.render(f'Score: {score}', 1, (255,0,0))
-
+    text = font.render(f'Score: {score}', 1, (255, 0, 0))
     screen.blit(text, (670, 20))
     wizard.draw(screen) # drawing wizard
     
