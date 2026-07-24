@@ -89,7 +89,15 @@ class spell_book():
         "or something" \
         "i really need to so something about this stuff I need to learn ore and more and more" \
         "May i be able to finish this game"
-        
+
+
+def all_regular_enemies_defeated(dungeon_dict):
+    for room_key, room in dungeon_dict.items():
+        if getattr(room, 'is_boss_room', False):
+            continue    
+        if len(room.enemies) > 0 or not room.cleared:
+            return False
+    return True
 
 #function to make things appear (magically!?) 
 def render_game(bat_projectiles):
@@ -100,7 +108,7 @@ def render_game(bat_projectiles):
         screen.blit(room_bg, (0,0))
     else:
         screen.fill('Grey')
-
+     
     if current_room.cleared and not room_key.visible:
         hidden = getattr(current_room, 'hidden_doors', [])
         if 'north' in current_room.connections and 'north' not in hidden:
@@ -111,12 +119,17 @@ def render_game(bat_projectiles):
             pygame.draw.rect(screen, (0,0,0), east_door_rect)
         if 'west' in current_room.connections and 'west' not in hidden:
             pygame.draw.rect(screen, (0,0,0), west_door_rect)
+    
+
+    if boss_locked_timer > 0:
+        locked_msg = font.render("Boss Door Sealed! Clear all rooms first.", True, (255, 50, 50))
+        screen.blit(locked_msg, (screen_width // 2 - locked_msg.get_width() // 2, 50))
 
     text = font.render(f'Score: {score}', 1, (255,0,0))
 
     screen.blit(text, (670, 20))
     wizard.draw(screen) # drawing wizard
-
+    
     #drawing enemy
     for e in enemies:
         e.draw(screen,wizard, offset_y=20, bar_width=50, enemies=enemies)
@@ -167,7 +180,14 @@ spell_limit = 5
 room_key = keys_drop()
 run = True
 shoot_loop = 0
+
+#game timers
 player_hit_cooldown = 0
+boss_locked_timer = 0
+
+
+
+
 
 #power list
 spells = []
@@ -262,6 +282,7 @@ while run:
             score = 0
             game_state = "MENU"
 
+    # game state of playing 
     elif game_state == "PLAYING":
 
         if shoot_loop > 0:
@@ -309,7 +330,7 @@ while run:
             enemy.hit_box = (enemy.x, enemy.y, enemy.hit_box[2], enemy.hit_box[3])
 
             enemy_rect = pygame.Rect(enemy.hit_box[0], enemy.hit_box[1], enemy.hit_box[2], enemy.hit_box[3])
-
+            
             #Position of bat spit
             if hasattr(enemy, 'type') and enemy.type == "bat":
                 enemy.shoot_cooldown -= 1
@@ -426,7 +447,7 @@ while run:
         #oneI shoot collision code 
         for shoot in oneI_spells[:]:
             shoot.update()    
-           
+        
             shoot_rect = pygame.Rect(shoot.x_pos, shoot.y_pos, 16, 16)
             if shoot_rect.colliderect(wizard_rect):
                 if player_hit_cooldown == 0:
@@ -502,34 +523,70 @@ while run:
                 spit.active = False
                 bat_projectiles.remove(spit)
 
-    
+        
                 
         enemies = [e for e in enemies if e.visible]
         if len(enemies) == 0 and not current_room.cleared:
             current_room.cleared = True
 
             if current_room.is_boss_room:
-                game_state = "victory"
+                game_state="victory"
             else:
                 room_key.visible = True
-        
+
+        next_room_key = None
+
+        if boss_locked_timer > 0:
+            boss_locked_timer -= 1
+
         next_room_key = None
 
         if current_room.cleared and not room_key.visible:
-            # East and west doors
+            #East and west doors
             if wizard_rect.colliderect(east_door_rect) and 'east' in current_room.connections:
-                next_room_key = current_room.connections['east']
-                wizard.x_pos = door_depth + 10
+                candidate_key = current_room.connections['east']
+                if dungeon[candidate_key].is_boss_room and not  all_regular_enemies_defeated(dungeon):
+                    wizard.x_pos -= 15
+                    boss_locked_timer = 60
+                else:
+                    next_room_key = candidate_key
+                    wizard.x_pos = door_depth + 10
+            
             elif wizard_rect.colliderect(west_door_rect) and 'west' in current_room.connections:
-                next_room_key = current_room.connections['west']
-                wizard.x_pos = screen_width - 128 - door_depth - 10
+                candidate_key = current_room.connections['west']
+                if dungeon[candidate_key].is_boss_room and not all_regular_enemies_defeated(dungeon):
+                    wizard.x_pos += 15
+                    boss_locked_timer = 60
+                else:
+                    next_room_key = candidate_key 
+                    wizard.x_pos = screen_width - 128 - door_depth - 10
+                if dungeon[candidate_key].is_boss_room and not all_regular_enemies_defeated(dungeon):
+                    wizard.x_pos += 15
+                    boss_locked_timer = 60
+                else: 
+                    wizard.y_pos -= 15 
+
+
+
             #North and south doors
             if wizard_rect.colliderect(north_door_rect) and 'north' in current_room.connections:
-                next_room_key = current_room.connections['north']
-                wizard.y_pos = screen_height - 128 - door_depth - 10
+                candidate_key = current_room.connections['north']
+                if dungeon[candidate_key].is_boss_room and not all_regular_enemies_defeated(dungeon):
+                    wizard.y_pos += 15
+                    boss_locked_timer = 60
+                else:
+                    next_room_key = candidate_key 
+                    wizard.y_pos = screen_height - 128 - door_depth - 10
             elif wizard_rect.colliderect(south_door_rect) and 'south' in current_room.connections:
-                next_room_key = current_room.connections['south']
-                wizard.y_pos = door_depth + 10
+                candidate_key = current_room.connections['south']
+                if dungeon[candidate_key].is_boss_room and not all_regular_enemies_defeated(dungeon):
+                    wizard.y_pos -= 15
+                    boss_locked_timer = 60
+                else:
+                    next_room_key = candidate_key
+                    wizard.y_pos = door_depth + 10 
+                
+                
 
         if next_room_key:
             current_room_key = next_room_key
@@ -620,8 +677,10 @@ while run:
                 
                 
         render_game(bat_projectiles)
-
     
 pygame.quit()
+
+
+
 
 

@@ -267,15 +267,15 @@ class bat(enemy):
         bat_center_y = self.hit_box[1] + self.hit_box[3] // 2
 
         if self.visible:
-            if self.x < wizard_center_x:
+            if bat_center_x < wizard_center_x: 
                 self.x += self.vel
-            elif self.x > wizard_center_x:
+            elif bat_center_x > wizard_center_x:
                 self.x -= self.vel 
 
-            if self.y < wizard_center_y:
+            if bat_center_y < wizard_center_y:
                 self.y += self.vel
-            elif self.y > wizard_center_y:
-                self.y -= self.vel 
+            elif bat_center_y > wizard_center_y:
+                self.y -= self.vel
 
         self.handle_seperation(enemies, radius=40, push_strength=2)
 
@@ -487,15 +487,16 @@ class oneI(enemy):
         oneI_center_y = self.hit_box[1] + self.hit_box[3] // 2
 
         if self.visible: 
-            if oneI_center_x < wizard_center_x:
+            if oneI_center_x - 10 < wizard_center_x:
                 self.x += self.vel
-            elif oneI_center_y > wizard_center_x:
+            elif oneI_center_x - 10 > wizard_center_x:
                 self.x -= self.vel
 
-            if oneI_center_y < wizard_center_y:
+            if oneI_center_y - 10 < wizard_center_y:
                 self.y += self.vel 
-            elif oneI_center_x > wizard_center_y:
+            elif oneI_center_y - 10 > wizard_center_y:
                 self.y -= self.vel 
+
 
             self.handle_seperation(enemies, radius=50, push_strength=3)
         

@@ -41,7 +41,7 @@ class repel_spell(spells):
         self.radius = 10
         self.max_radius = 200
         self.growth_speed = 9
-        self.push_force = 15
+        self.push_force = 35
         self.active = True
         self.walk_count = 0
 
