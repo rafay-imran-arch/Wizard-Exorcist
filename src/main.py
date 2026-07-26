@@ -198,6 +198,7 @@ shoot_loop = 0
 player_hit_cooldown = 0
 boss_locked_timer = 0
 
+
 #power list
 spells = []
 bat_projectiles = []

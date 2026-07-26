@@ -143,10 +143,24 @@ class enemy():
         self.visible = True
         self.hit_box = (self.x, self.y, self.width, self.height)
 
+        # for dead animation
+        self.is_dying = False
+        self.death_animation_count = 0
+
+
+        # assets for death effecs
+        self.effect_dir = os.path.join('src', 'assets', 'effects', 'eff', 'PNG')
+        self.death_dir = os.path.join(self.effect_dir, 'Fantasy Spells', 'spell_poison_001', 'spell_poison_001_small_green')
+        self.death_frames = [ pygame.transform.scale(
+            pygame.image.load(os.path.join(self.death_dir, f"frame{i:04}.png")),
+            (64, 64)
+        ) for i in range(17)
+        ]
+
         self.enemy_dir = os.path.join('src','assets', 'creatures')
 
     def draw(self, screen, offset_y, bar_width):
-        if self.visible:
+        if self.visible and not self.is_dying:
             pygame.draw.rect(screen, (255,0,0), (self.hit_box[0], self.hit_box[1] - offset_y, bar_width, 8))
             health_percentage = self.health / self.max_health
             fill_width = int(bar_width * health_percentage)
@@ -155,7 +169,7 @@ class enemy():
     def handle_seperation(self, enemies, radius=40, push_strength=2):
         #At first I did for each enemy then I remembered inheritance so....
         for other in enemies:
-            if other == self or not other.visible:
+            if other == self or not other.visible or other.is_dying:
                 continue
 
             distance_x = self.x - other.x
@@ -179,8 +193,27 @@ class enemy():
     def hit(self):
         if self.health > 0:
             self.health -= 1
-        else: 
-            self.visible = False
+            if self.health <= 0:
+                self.health = 0 
+                self.is_dying = True
+
+    def play_death_animation(self, screen):
+        if not self.is_dying or not self.visible:
+            return 
+
+        if self.death_frames:
+            frame_index = (self.death_animation_count // 4) 
+            if frame_index < len(self.death_frames):
+                current_frame = self.death_frames[frame_index]
+                center_x = self.x + 32
+                center_y = self.y + 32
+                screen.blit(current_frame, (center_x, center_y))
+                self.death_animation_count += 1
+            else:
+                self.visible = False
+       
+
+
 
 
 class ghost(enemy):
@@ -198,6 +231,9 @@ class ghost(enemy):
         ]
 
     def move(self, wizard, enemies):
+        if not self.visible or self.is_dying:
+            return
+        
         wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
         wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
 
@@ -219,6 +255,10 @@ class ghost(enemy):
 
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)  
+        if self.is_dying:
+                    self.play_death_animation(screen)
+                    return
+        
         if self.visible:
 
             frame_index = (self.walk_count // 6) % len(self.ghost_frames)
@@ -238,8 +278,7 @@ class ghost(enemy):
 
             super().draw(screen, offset_y, bar_width)
 
-
-
+        
 class bat(enemy):
 
     def __init__(self, x, y, width, height, facing="downwards"):
@@ -260,6 +299,9 @@ class bat(enemy):
         ]
 
     def move(self, wizard, enemies):
+        if not self.visible and self.is_dying:
+            return
+        
         wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
         wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
 
@@ -283,6 +325,10 @@ class bat(enemy):
     
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)
+
+        if self.is_dying:
+            self.play_death_animation(screen)
+            return
         if self.visible:
 
             frame_index = (self.walk_count // 6) % len(self.bat_frames)
@@ -301,8 +347,7 @@ class bat(enemy):
 
 
             super().draw(screen, offset_y, bar_width)
-
-
+        
 class slime(enemy):
 
     def __init__(self,x, y, width, height, is_small=False):
@@ -336,6 +381,8 @@ class slime(enemy):
                 self.slime_frames.append(pygame.transform.scale(frame, (128,128)))
             
     def move(self,wizard,enemies):
+        if not self.visible and self.is_dying:
+            return
         wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
         wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
         
@@ -359,6 +406,9 @@ class slime(enemy):
 
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)
+        if self.is_dying:
+            self.play_death_animation(screen)
+            return
         if self.visible:
 
             num_frames = max(1, len(self.slime_frames))
@@ -378,7 +428,9 @@ class slime(enemy):
 
             super().draw(screen, offset_y, bar_width)
 
-
+        if self.is_dying:
+            self.play_death_animation(screen)
+            return
 class pumpkin(enemy):
     def __init__(self, x, y, width, height):
         super().__init__(x, y, width, height, max_health=25, vel=1.8, damage=5)
@@ -398,6 +450,8 @@ class pumpkin(enemy):
         ]
 
     def move(self, wizard, enemies):
+        if not self.visible and self.is_dying:
+            return
         wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
         wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
 
@@ -419,7 +473,10 @@ class pumpkin(enemy):
             
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)
-
+        if self.is_dying:
+            self.play_death_animation(screen)
+            return 
+        
         if self.visible:
 
             frame_index = (self.walk_count // 3) % len(self.pumpkin_frames)
@@ -479,7 +536,8 @@ class oneI(enemy):
         self.oneI_frames = self.oneI_frames[:25]
 
     def move(self, wizard, enemies):
-
+        if not self.visible and self.is_dying:
+            return 
         wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
         wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
 
@@ -503,7 +561,9 @@ class oneI(enemy):
 
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)
-
+        if self.is_dying: 
+            self.play_death_animation
+            return
         if len(self.oneI_frames) > 0:
             frame_index = (self.walk_count // 6) % len(self.oneI_frames)
             current_frame = self.oneI_frames[frame_index]
