@@ -338,6 +338,8 @@ while run:
             if current_room.is_boss_room and not current_room.cleared:
                 pass
 
+            new_spawned_enemies = []
+
             for enemy in enemies:
                 if enemy.x < 0:
                     enemy.x = 0
@@ -417,6 +419,7 @@ while run:
                             score -= 0
                         player_hit_cooldown = 30
 
+                new_spawned_enemies = []
                 if enemy.visible:
                     for spell in spells[:]:
                             spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
@@ -428,25 +431,14 @@ while run:
                                 if spell in spells:
                                     spells.remove(spell)
 
-                                if not enemy.visible:
-                                    #small slime spawn from big one's death
-                                    if hasattr(enemy, 'type') and enemy.type == 'slime':
-                                        slime_a = slime(enemy.x - 20, enemy.y, 64, 64, is_small=True)
-                                        slime_b = slime(enemy.x + 20, enemy.y, 64, 64, is_small=True)
-                                        enemies.append(slime_a)
-                                        enemies.append(slime_b)
-                                        current_room.enemies.append(slime_a)
-                                        current_room.enemies.append(slime_b)
-
-                                    if enemy in enemies:
-                                        enemies.remove(enemy)
-                                    if enemy in current_room.enemies:
-                                        current_room.enemies.remove(enemy)
+                                if getattr(enemy, 'health', 0) <= 0 or not enemy.visible:
+                                    enemy.visible = False
+                                    if isinstance(enemy, slime) and not getattr(enemy, 'is_small', False):
+                                        slime_a = slime(enemy.x, enemy.y, 64, 64, is_small=True)
+                                        slime_b = slime(enemy.x, enemy.y + 15, 64, 64, is_small=True)
+                                        new_spawned_enemies.extend([slime_a, slime_b])
                                 break
                 
-                if enemy.visible:
-                    for spell in spells[:]:
-                        spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
 
                 # oneI radial blast 
                 if hasattr(enemy, 'type') and enemy.type == "oneI":
@@ -456,7 +448,10 @@ while run:
                         new_burst = oneI_radial_burst(enemy.x +32, enemy.y + 32, num_shoots=12)
                         oneI_radial_blast.append(new_burst)
                         enemy.radial_cooldown = 240
-                        
+
+            if new_spawned_enemies: 
+                enemies.extend(new_spawned_enemies)
+                current_room.enemies.extend(new_spawned_enemies)           
 
             # Wizard repel spell
 
@@ -547,15 +542,16 @@ while run:
             
                     
             enemies = [e for e in enemies if e.visible]
+            current_room.enemies = enemies
+            
             if len(enemies) == 0 and not current_room.cleared:
-                current_room.cleared = True
+                current_room.cleared = True 
 
                 if current_room.is_boss_room:
-                    game_state="victory"
+                    game_state = "victory"
                 else:
                     room_key.visible = True
 
-            next_room_key = None
 
             if boss_locked_timer > 0:
                 boss_locked_timer -= 1
