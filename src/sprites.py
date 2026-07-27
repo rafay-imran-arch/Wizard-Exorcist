@@ -414,7 +414,6 @@ class slime(enemy):
 
         if self.is_dying:
             self.play_death_animation(screen)
-            self.play_death_animation(screen)
             return 
         
         if self.visible:
@@ -437,18 +436,13 @@ class slime(enemy):
             super().draw(screen, offset_y, bar_width)
 
     def hit(self):
-        spawned_minions = []
         if self.health > 0:
             self.health -= 1
             if self.health <= 0:
                 self.health = 0
                 self.is_dying = True 
+                self.visible = False
 
-                if not self.is_small:
-                    spawned_minions.append(slime(self.x -15, self.y, 64, 64, is_small=True))
-                    spawned_minions.append(slime(self.x - 15, self.y, 64, 64, is_small=True))
-
-        return spawned_minions
 class pumpkin(enemy):
     def __init__(self, x, y, width, height):
         super().__init__(x, y, width, height, max_health=25, vel=1.8, damage=5)

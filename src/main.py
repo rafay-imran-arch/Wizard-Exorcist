@@ -199,13 +199,15 @@ player_hit_cooldown = 0
 boss_locked_timer = 0
 
 
-#power list
+#game lists
 spells = []
 bat_projectiles = []
 oneI_spells = []
 oneI_beam_spells = []
 repel_spells = []
 oneI_radial_blast = []
+
+
 
 dungeon = build_dungeon()
 dungeon_stairs_room_key = None # Add this later a cool type looking key which appears only once you kill all the other enemies
@@ -419,7 +421,6 @@ while run:
                             score -= 0
                         player_hit_cooldown = 30
 
-                new_spawned_enemies = []
                 if enemy.visible:
                     for spell in spells[:]:
                             spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
@@ -430,13 +431,13 @@ while run:
 
                                 if spell in spells:
                                     spells.remove(spell)
-
-                                if getattr(enemy, 'health', 0) <= 0 or not enemy.visible:
-                                    enemy.visible = False
-                                    if isinstance(enemy, slime) and not getattr(enemy, 'is_small', False):
-                                        slime_a = slime(enemy.x, enemy.y, 64, 64, is_small=True)
-                                        slime_b = slime(enemy.x, enemy.y + 15, 64, 64, is_small=True)
-                                        new_spawned_enemies.extend([slime_a, slime_b])
+                                if not enemy.visible or getattr(enemy, 'is_dying', False):
+                                    if getattr(enemy, 'health', 0) <= 0 or not enemy.visible:
+                                        enemy.visible = False
+                                        if isinstance(enemy, slime) and not getattr(enemy, 'is_small', False):
+                                            slime_a = slime(enemy.x, enemy.y, 64, 64, is_small=True)
+                                            slime_b = slime(enemy.x, enemy.y + 15, 64, 64, is_small=True)
+                                            new_spawned_enemies.extend([slime_a, slime_b])
                                 break
                 
 
@@ -451,8 +452,7 @@ while run:
 
             if new_spawned_enemies: 
                 enemies.extend(new_spawned_enemies)
-                current_room.enemies.extend(new_spawned_enemies)           
-
+               
             # Wizard repel spell
 
             for spell in repel_spells[:]:
