@@ -70,11 +70,24 @@ class player():
         self.walk_left = [
             pygame.transform.flip(sprite, True, False) for sprite in self.walk_right
             ]
+
+        # player death stuff
+        self.is_dying = False
+        self.death_animation_count = 0
+        self.dying_dir = os.path.join("src", "assets", "effects", "eff", "PNG", "Smoke Bursts","stylized_skull_smoke_burst_001", "stylized_skull_smoke_burst_001_small_white")
+        self.death_frames = [   pygame.transform.scale(
+            pygame.image.load(os.path.join(self.dying_dir, f"frame{i:04}.png")),
+            (128, 128)
+        ) for i in range(12)
+        ]
         
     def draw(self, screen):
         #self.rect.x = self.x_pos
         #self.rect.y = self.y_pos
-
+        if self.is_dying:
+            self.play_death_animation(screen)
+            return 
+        
         if self.walk_count + 1 >= 24:
             self.walk_count = 0
 
@@ -123,7 +136,17 @@ class player():
         if self.health > 0:
             self.health -= damage_ammount
             self.walk_count = 0
-            pygame.display.update()
+            if self.health <=0:
+                self.health = 0
+                self.is_dying = True 
+
+
+    def play_death_animation(self, screen):
+        if self.death_frames:
+            frame_index = self.death_animation_count // 3
+            if frame_index < len(self.death_frames):
+                screen.blit(self.death_frames[frame_index], (self.x_pos + 64, self.y_pos + 64))
+                self.death_animation_count += 1
 
 class enemy():
     
@@ -160,7 +183,11 @@ class enemy():
         self.enemy_dir = os.path.join('src','assets', 'creatures')
 
     def draw(self, screen, offset_y, bar_width):
-        if self.visible and not self.is_dying:
+        if self.is_dying:
+            self.play_death_animation(screen)
+            return
+        
+        if self.visible:
             pygame.draw.rect(screen, (255,0,0), (self.hit_box[0], self.hit_box[1] - offset_y, bar_width, 8))
             health_percentage = self.health / self.max_health
             fill_width = int(bar_width * health_percentage)
@@ -191,18 +218,17 @@ class enemy():
                     self.y += random.choice([-1,1])
 
     def hit(self):
-        if self.health > 0:
+        if not self.is_dying and self.health >0:
             self.health -= 1
             if self.health <= 0:
                 self.health = 0 
                 self.is_dying = True
+                self.death_animation_count = 0
 
     def play_death_animation(self, screen):
-        if not self.is_dying or not self.visible:
-            return 
 
         if self.death_frames:
-            frame_index = (self.death_animation_count // 4) 
+            frame_index = (self.death_animation_count // 2) 
             if frame_index < len(self.death_frames):
                 current_frame = self.death_frames[frame_index]
                 center_x = self.x + 32
@@ -211,8 +237,11 @@ class enemy():
                 self.death_animation_count += 1
             else:
                 self.visible = False
+                self.is_dying = False
        
-
+        else:
+            self.visible = False
+            self.is_dying = False
 
 
 
@@ -441,7 +470,7 @@ class slime(enemy):
             if self.health <= 0:
                 self.health = 0
                 self.is_dying = True 
-                self.visible = False
+                #self.visible = False
 
 class pumpkin(enemy):
     def __init__(self, x, y, width, height):
@@ -574,7 +603,7 @@ class oneI(enemy):
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)
         if self.is_dying: 
-            self.play_death_animation
+            self.play_death_animation(screen)
             return
         if len(self.oneI_frames) > 0:
             frame_index = (self.walk_count // 6) % len(self.oneI_frames)

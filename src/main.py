@@ -197,6 +197,8 @@ shoot_loop = 0
 #game timers
 player_hit_cooldown = 0
 boss_locked_timer = 0
+player_death_timer = 0 
+max_death_frames = 30
 
 
 #game lists
@@ -306,8 +308,9 @@ while run:
             score = 0
             game_state = "MENU"
 
-    # game state of playing 
+    # game state playing 
     elif game_state == "PLAYING":
+
         if not game_paused:
             if shoot_loop > 0:
                 shoot_loop += 1
@@ -320,6 +323,11 @@ while run:
 
             if room_key.collected and room_key.text_timer > 0:
                 room_key.text_timer -= 1
+
+            if wizard.health <= 0 and not admin_mode:
+                game_state = 'Dying'
+                player_death_timer = max_death_frames
+                wizard.is_dying = True 
 
             active_spells = []
             for spell in spells[:]:        
@@ -343,6 +351,10 @@ while run:
             new_spawned_enemies = []
 
             for enemy in enemies:
+
+                if getattr(enemy, 'is_dying', False) or not enemy.visible:
+                    continue
+                
                 if enemy.x < 0:
                     enemy.x = 0
                 elif enemy.x > screen_width - enemy.hit_box[2]:
@@ -421,7 +433,7 @@ while run:
                             score -= 0
                         player_hit_cooldown = 30
 
-                if enemy.visible:
+                if enemy.visible and not getattr(enemy, 'is_dying', False):
                     for spell in spells[:]:
                             spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
 
@@ -431,16 +443,13 @@ while run:
 
                                 if spell in spells:
                                     spells.remove(spell)
-                                if not enemy.visible or getattr(enemy, 'is_dying', False):
-                                    if getattr(enemy, 'health', 0) <= 0 or not enemy.visible:
-                                        enemy.visible = False
-                                        if isinstance(enemy, slime) and not getattr(enemy, 'is_small', False):
-                                            slime_a = slime(enemy.x, enemy.y, 64, 64, is_small=True)
-                                            slime_b = slime(enemy.x, enemy.y + 15, 64, 64, is_small=True)
-                                            new_spawned_enemies.extend([slime_a, slime_b])
-                                break
-                
 
+                                # the hectic slime splits 
+                                if (isinstance(enemy, slime) and enemy.is_dying and not getattr(enemy, 'is_small', False)):
+                                    slime_a = slime(enemy.x, enemy.y, 64, 64, is_small=True)
+                                    slime_b = slime(enemy.x, enemy.y+25, 64, 64, is_small=True)
+                                    new_spawned_enemies.extend([slime_a, slime_b])
+                                break
                 # oneI radial blast 
                 if hasattr(enemy, 'type') and enemy.type == "oneI":
                     if enemy.radial_cooldown > 0:
@@ -541,7 +550,7 @@ while run:
 
             
                     
-            enemies = [e for e in enemies if e.visible]
+            enemies = [e for e in current_room.enemies if e.visible or e.is_dying]
             current_room.enemies = enemies
             
             if len(enemies) == 0 and not current_room.cleared:
@@ -669,23 +678,9 @@ while run:
                     spell_sound.play()
                     spells.append(projectile_spell(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
                 shoot_loop = 1  
+        
             
-
-            if wizard.health <= 0:
-                if admin_mode:
-                    pass
-                else:
-                    game_state = "game_over"
-                    score = 0
-                    
-                    wizard.health = wizard.max_health
-                    wizard.x_pos, wizard.y_pos = 400,200
-                    current_room_key = "spawn room"
-                    current_room = dungeon[current_room_key]
-                    enemies = current_room.enemies
-                    room_key.visible = False
-                    room_key.collected = False  
-                    
+               
                     
         render_game(bat_projectiles)
 
@@ -694,6 +689,25 @@ while run:
 
         pygame.display.update()
         clock.tick(30)
+
+    elif game_state == "Dying":
+        render_game(bat_projectiles)
+        wizard.play_death_animation(screen)  
+
+        if player_death_timer <= 0:
+            game_state = "game_over"
+            score = 0
+            wizard.health = wizard.max_health
+            wizard.x_pos, wizard.y_pos = 400,200
+            current_room_key = "spawn room"
+            current_room = dungeon[current_room_key]
+            enemies = current_room.enemies
+            room_key.visible = False
+            room_key.collected = False  
+
+        pygame.display.update()
+        clock.tick(30)
+                            
 pygame.quit()
 
 
