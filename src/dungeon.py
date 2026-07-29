@@ -143,7 +143,7 @@ def build_dungeon():
         ])
     
     }
-
+    
 
     rooms["spawn room"].connections = {'north': "north vault", "east": "the solar", "west": "the study", 'south': "spawn room2"}
     rooms["north vault"].connections = {'south': 'spawn room'}
@@ -161,14 +161,14 @@ def build_dungeon():
     rooms['princes room'].connections = {'west': 'west wing hallway3'}
 
     #West wing hallway connections
-    rooms['west wing hallway1'].connections = {'north':'north west guard', 'east': 'the study'} 
-    rooms['west wing hallway2'].connections = {'east': 'banquet hall'}
-    rooms['west wing hallway3'].connections = {'east': 'princes room', 'south': 'south west guard'}
+    rooms['west wing hallway1'].connections = {'north':'north west guard', 'south': 'west wing hallway2', 'east': 'the study'} 
+    rooms['west wing hallway2'].connections = {'north': 'west wing hallway1', 'south': 'west wing hallway3','east': 'banquet hall'}
+    rooms['west wing hallway3'].connections = {'north': 'west wing hallway2', 'east': 'princes room', 'south': 'south west guard'}
 
     #East wing hallway connections
-    rooms['east wing hallway1'].connections = {'north': 'north east guard', 'west': 'the solar'}
-    rooms['east wing hallway2'].connections = {'south': 'east wing hallway3', 'west': 'great dining'}
-    rooms['east wing hallway3'].connections = {'west': 'dungeon stairs', 'south': 'south east guard'}
+    rooms['east wing hallway1'].connections = {'north': 'north east guard', 'south': 'east wing hallway2','west': 'the solar'}
+    rooms['east wing hallway2'].connections = {'north': 'east wing hallway1', 'south': 'east wing hallway3', 'west': 'great dining'}
+    rooms['east wing hallway3'].connections = {'north': 'east wing hallway2', 'west': 'dungeon stairs', 'south': 'south east guard'}
 
     #Guardrooms/ towers connections
     rooms['north east guard'].connections = {'south': 'east wing hallway1'}
@@ -198,3 +198,4 @@ def build_dungeon():
 
 # NOTES TO SELF :
 # THE UPPER ROOMS ie NORTH and the BOTTOM rooms ie SOUTH of Hallway1 and 3 should be ignored respectively
+

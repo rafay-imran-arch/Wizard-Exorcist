@@ -60,12 +60,14 @@ def draw_pause_menu(screen, font, screen_width, screen_height, bgm_slider, sfx_s
     title_surf = font.render("PAUSED", True, (255, 255, 255))
     screen.blit(title_surf, (screen_width // 2 - title_surf.get_width() // 2, py+30))
 
+    bgm_slider.rect.y = py + 105
     bgm_label = font.render("MUSIC", True, (200, 200, 220))
     bgm_val_text = font.render(f"{int(bgm_slider.val * 100)}%", True, (150, 220, 255))
     screen.blit(bgm_label, (px+30, py+100))
     bgm_slider.draw(screen)
     screen.blit(bgm_val_text, (px + 335, py + 100))
 
+    sfx_slider.rect.y = py + 165
     sfx_label = font.render("SFX", True, (200,200,220))
     sfx_val_text = font.render(f"{int(sfx_slider.val * 100)}%", True, (150,220,255))
     screen.blit(sfx_label, (px+ 30, py+160))
