@@ -627,7 +627,7 @@ class keys_drop():
     def __init__(self):
         random_x =  random.randint(50,700)
         random_y = random.randint(50,700)
-        self.rect = pygame.Rect(random_x, random_y, 16, 16)
+        self.rect = pygame.Rect(0, 0, 16, 16)
         self.visible = False
         self.collected = False
         self.text_timer = 0
@@ -640,6 +640,12 @@ class keys_drop():
             2
         ) for i in range(4)
         ]
+
+    def spawn(self, min_x = 150, max_x = 1050, min_y = 100, max_y = 600):
+        self.rect.x = random.randint(min_x, max_x)
+        self.rect.y = random.randint(min_y, max_y)
+        self.visible = True 
+        self.collected = False
     
     def draw(self, screen):
         if self.visible and not self.collected:

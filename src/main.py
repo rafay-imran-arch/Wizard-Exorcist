@@ -559,7 +559,7 @@ while run:
                 if current_room.is_boss_room:
                     game_state = "victory"
                 else:
-                    room_key.visible = True
+                    room_key.spawn(min_x= 150, max_x= 1050, min_y= 100, max_y =600 )
 
 
             if boss_locked_timer > 0:
