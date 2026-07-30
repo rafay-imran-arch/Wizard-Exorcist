@@ -243,13 +243,12 @@ while run:
             pygame.mixer.music.set_volume(bgm_slider.val)
             for sfx in sfx_list:
                 sfx.set_volume(sfx_slider.val)
-
-    if game_state == "MENU":
+    
+    if game_state == "MENU":    
         if start_screen_bg:
             screen.blit(start_screen_bg, (0,0))
         else:
             screen.fill('Grey')
-
         
         if play_button_rect.collidepoint(mouse_pos):
             pygame.draw.rect(screen, color_hover, play_button_rect, border_radius=10)
@@ -627,32 +626,33 @@ while run:
                     
             #check key presses for controls 
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            wizard.is_moving = False
+
+            if  keys[pygame.K_a]:
                 wizard.facing = "left"
                 wizard.is_moving = True
-                if wizard.hit_box[0]> 0:
-                    wizard.x_pos -= wizard.vel
-            
-            elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+                if wizard.hit_box[0] > 0:
+                    wizard.x_pos -= wizard.vel 
+
+            if keys[pygame.K_d]:
                 wizard.facing = "right"
                 wizard.is_moving = True
-                if wizard.hit_box[0] + wizard.hit_box[2] < screen_width :
+                if wizard.hit_box[0] + wizard.hit_box[2] < screen_width:
                     wizard.x_pos += wizard.vel
 
-            elif keys[pygame.K_UP] or keys[pygame.K_w]:
+            
+            if keys[pygame.K_w]:
                 wizard.facing = "upwards"
                 wizard.is_moving = True 
-                if wizard.hit_box[1] > 0:
-                    wizard.y_pos -= wizard.vel
+                if wizard.hit_box[0] > 0:
+                    wizard.y_pos -= wizard.vel 
 
-            elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            if keys[pygame.K_s]:
                 wizard.facing = "downwards"
                 wizard.is_moving = True
                 if wizard.hit_box[1] + wizard.hit_box[3] < screen_height:
-                    wizard.y_pos += wizard.vel
-            else:
-                wizard.is_moving = False
-            
+                    wizard.y_pos += wizard.vel 
+
             if keys[pygame.K_PERIOD]:
                 recharge_sound.play()
                 if wizard.mana < 10:

@@ -331,21 +331,17 @@ class bat(enemy):
         if not self.visible and self.is_dying:
             return
         
-        wizard_center_x = wizard.hit_box[0] + wizard.hit_box[2] // 2
-        wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
-
-        bat_center_x = self.hit_box[0] + self.hit_box[2] // 2
-        bat_center_y = self.hit_box[1] + self.hit_box[3] // 2
+    
 
         if self.visible:
-            if bat_center_x < wizard_center_x: 
+            if self.x < wizard.x_pos: 
                 self.x += self.vel
-            elif bat_center_x > wizard_center_x:
+            elif self.x > wizard.x_pos:
                 self.x -= self.vel 
 
-            if bat_center_y < wizard_center_y:
+            if self.y < wizard.y_pos:
                 self.y += self.vel
-            elif bat_center_y > wizard_center_y:
+            elif self.y > wizard.y_pos:
                 self.y -= self.vel
 
         self.handle_seperation(enemies, radius=40, push_strength=2)
