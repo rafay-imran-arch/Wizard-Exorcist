@@ -672,15 +672,17 @@ while run:
                     new_repel = repel_spell(center_x, center_y, wizard.facing)
                     repel_spells.append(new_repel)
             
-            if (keys[pygame.K_SPACE] or keys[pygame.K_COMMA]) and shoot_loop == 0 and not keys[pygame.K_PERIOD]:
+            if (keys[pygame.K_SPACE] or keys[pygame.K_COMMA]) and shoot_loop == 0 and not keys[pygame.K_PERIOD] and not keys[pygame.K_f]:
                 if wizard.mana > 0 and len(spells) < spell_limit:
                     wizard.mana -= 1
                     spell_sound.play()
                     spells.append(projectile_spell(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
                 shoot_loop = 1  
-        
             
-               
+            
+            
+            
+            
                     
         render_game(bat_projectiles)
 
@@ -694,10 +696,13 @@ while run:
         render_game(bat_projectiles)
         wizard.play_death_animation(screen)  
 
+        player_death_timer -= 1
+
         if player_death_timer <= 0:
             game_state = "game_over"
             score = 0
             wizard.health = wizard.max_health
+            wizard.is_dying = False
             wizard.x_pos, wizard.y_pos = 400,200
             current_room_key = "spawn room"
             current_room = dungeon[current_room_key]

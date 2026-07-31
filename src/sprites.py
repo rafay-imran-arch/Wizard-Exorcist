@@ -2,6 +2,8 @@
 import pygame
 import os
 import random
+import math 
+
 
 pygame.init()
 
@@ -486,6 +488,13 @@ class pumpkin(enemy):
         ) for i in range(6)
         ]
 
+        self.state = "chase"
+        self.state_timer = 0
+        self.charge_dx = 0 
+        self.charge_dy = 0
+        self.charge_speed = 9.0
+        self.rotation_angle = 0 
+
     def move(self, wizard, enemies):
         if not self.visible and self.is_dying:
             return
@@ -493,20 +502,47 @@ class pumpkin(enemy):
         wizard_center_y = wizard.hit_box[1] + wizard.hit_box[3] // 2
 
         pumpkin_center_x = self.hit_box[0] + self.hit_box[2] // 2
-        pumpkin_center_y = self.hit_box[1] + self.hit_box[3] // 2
+        pumpkin_center_y = self.hit_box[1] + self.hit_box[3] // 2   
 
-        if self.visible: 
-            if pumpkin_center_x > wizard_center_x:
-                self.x -= self.vel
-            elif pumpkin_center_x < wizard_center_x:
-                self.x += self.vel 
-            
-            if pumpkin_center_y > wizard_center_y:
-                self.y -= self.vel 
-            elif pumpkin_center_y < wizard_center_y:
-                self.y += self.vel 
-    
-            self.handle_seperation(enemies, radius=40, push_strength=2)
+        dist_x = wizard_center_x - pumpkin_center_x
+        dist_y = wizard_center_y - pumpkin_center_y
+        distance = math.hypot(dist_x, dist_y)
+
+        if self.state == "chase":
+            if distance > 0:
+                self.x += (dist_x / distance) * self.vel 
+                self.y += (dist_y / distance) * self.vel 
+
+            if distance < 250:
+                self.state = "windup"
+                self.state_timer = 20 
+
+                self.charge_dx = dist_x / distance if distance > 0 else 1
+                self.charge_dy = dist_y / distance if distance > 0 else 0
+        
+        elif self.state == "windup":
+            self.state_timer -= 1
+            if self.state_timer <= 0:
+                self.state = "charge"
+                self.state_timer = 40
+
+        elif self.state == "charge":
+            self.x += self.charge_dx * self.charge_speed
+            self.y += self.charge_dy * self.charge_speed
+
+            self.rotation_angle = (self.rotation_angle - 25) % 360
+
+            self.state_timer -= 1
+            if self.state_timer <= 0:
+                self.state = "cooldown"
+                self.state_timer = 10
+
+        elif self.state == "cooldown":
+            self.state_timer -= 1
+            if self.state_timer <= 0:
+                self.state = "chase"
+
+        self.handle_seperation(enemies, radius=40, push_strength=2)
             
     def draw(self, screen, wizard, offset_y, bar_width, enemies):
         self.move(wizard, enemies)
@@ -519,7 +555,18 @@ class pumpkin(enemy):
             frame_index = (self.walk_count // 3) % len(self.pumpkin_frames)
             current_frame = self.pumpkin_frames[frame_index]
             self.walk_count += 1
-            screen.blit(current_frame, (self.x, self.y))
+            
+            if self.state == "charge":
+                rotated_frame = pygame.transform.rotate(current_frame, self.rotation_angle)
+                new_rect = rotated_frame.get_rect(center=current_frame.get_rect(topleft=(self.x, self.y)).center)
+                screen.blit(rotated_frame, new_rect.topleft)
+
+            elif self.state == "windup":
+                tinted = current_frame.copy()
+                tinted.fill((255, 100, 100), special_flags=pygame.BLEND_RGBA_MULT)
+                screen.blit(tinted, (self.x, self.y))
+            else:
+                screen.blit(current_frame, (self.x, self.y))
 
             pad_x = 24
             pad_y = 25
@@ -528,9 +575,9 @@ class pumpkin(enemy):
             hit_w = self.width - (2 * pad_x)
             hit_h = self.height - (2 * pad_y)
             self.hit_box = (hit_x, hit_y, hit_w, hit_h)
-            pygame.draw.rect(screen, (255, 0, 0), self.hit_box, 2)
 
-
+            if getattr(wizard, 'admin_mode', False):
+                pygame.draw.rect(screen, (255,0,0), self.hit_box, 2)
             super().draw(screen, offset_y, bar_width)
 
 #Likely the boss in the dungeon stairs room (this room shall only open once all others are cleared)
