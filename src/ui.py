@@ -76,3 +76,27 @@ def draw_pause_menu(screen, font, screen_width, screen_height, bgm_slider, sfx_s
 
     sub_text = font.render("Press P to Resume", True, (140, 140, 160))
     screen.blit(sub_text, (screen_width // 2 - sub_text.get_width() // 2, py+ 250))
+
+
+
+#for the ui of the spells lkely for cooldown
+def draw_ability_icons(screen, x , y , size, key_text, current_cooldown, max_cooldown,  color=(100,100,255)):
+
+    icon_rect = pygame.Rect(x,y, size, size)
+    pygame.draw.rect(screen, (20, 35, 75), icon_rect, border_radius=6)
+    pygame.draw.rect(screen, color, icon_rect, width=2, border_radius=6)
+
+    key_font = pygame.font.SysFont("comicsnas", 16, True)
+    label = key_font.render(key_text, True, (255,255,255))
+    screen.blit(label, (x+20, y+20))
+
+    if current_cooldown > 0 and max_cooldown > 0:
+
+        pct = current_cooldown / max_cooldown
+        mask_height = int(size*pct)
+
+        mask_surf = pygame.Surface((size, mask_height), pygame.SRCALPHA)
+        mask_surf.fill((0,0,0,180))
+        screen.blit(mask_surf, (x, y + (size - mask_height)))
+        
+      

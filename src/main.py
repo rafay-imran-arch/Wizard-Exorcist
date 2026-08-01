@@ -3,7 +3,7 @@ import os
 from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI
 from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial
 from dungeon import build_dungeon
-from ui import slider, draw_pause_menu
+from ui import slider, draw_pause_menu, draw_ability_icons  
 pygame.init()
 
 
@@ -162,7 +162,11 @@ def render_game(bat_projectiles):
         clear_level_1 = font.render("Level 1 Cleared", True, (0,255,128))
         screen.blit(clear_level_1, (400,400))
 
+    draw_ability_icons(screen, x = 10, y= screen_height - 70, size= 50,
+                       key_text="DASH", current_cooldown=dash_cooldown, max_cooldown=300, color=(80,180,255))
 
+    draw_ability_icons(screen, x=90, y=screen_height - 70, size=50,
+                       key_text="Repelorius", current_cooldown=repel_cooldown, max_cooldown=300, color=(80,180,100))
 
 #SOUND SYSTEM   
 sound_dir = os.path.join('src','assets', 'sounds')
@@ -199,6 +203,8 @@ player_hit_cooldown = 0
 boss_locked_timer = 0
 player_death_timer = 0 
 max_death_frames = 30
+dash_cooldown = 0
+repel_cooldown = 0
 
 
 #game lists
@@ -644,7 +650,7 @@ while run:
             if keys[pygame.K_w]:
                 wizard.facing = "upwards"
                 wizard.is_moving = True 
-                if wizard.hit_box[0] > 0:
+                if wizard.hit_box[1] > 0:
                     wizard.y_pos -= wizard.vel 
 
             if keys[pygame.K_s]:
@@ -660,11 +666,14 @@ while run:
             else:
                 recharge_sound.stop()
             
+            if repel_cooldown > 0:
+                repel_cooldown -= 1
             if keys[pygame.K_f]:
                 
-                if len(repel_spells) == 0 and wizard.mana >=3:
+                if len(repel_spells) == 0 and repel_cooldown == 0 and wizard.mana >=3:
                     spell2_sound.play()
                     wizard.mana -= 3
+                    repel_cooldown = 300
 
                     center_x = wizard.x_pos + wizard.character_size[0] // 2
                     center_y = wizard.y_pos + wizard.character_size[1] // 2
@@ -679,11 +688,26 @@ while run:
                     spells.append(projectile_spell(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
                 shoot_loop = 1  
             
+            if dash_cooldown > 0:
+                dash_cooldown -= 1
+            if keys[pygame.K_LSHIFT] and dash_cooldown == 0 and wizard.mana >= 2:
+                dash_cooldown = 300
+
+                dash_dist = 70
+                if wizard.facing == "left" and wizard.hit_box[0] - dash_dist > 0:
+                    wizard.x_pos -= dash_dist
+                    wizard.mana -= 2
+                elif wizard.facing == "right" and wizard.hit_box[0] + wizard.hit_box[2] + dash_dist < screen_width:
+                    wizard.x_pos += dash_dist
+                    wizard.mana -= 2
+                elif wizard.facing == "upwards" and wizard.hit_box[1] - dash_dist > 0:
+                    wizard.y_pos -= dash_dist
+                    wizard.mana -= 2
+                elif wizard.facing == "downwards" and wizard.hit_box[1] + wizard.hit_box[3] + dash_dist < screen_height:
+                    wizard.y_pos += dash_dist
+                    wizard.mana -= 2
             
-            
-            
-            
-                    
+
         render_game(bat_projectiles)
 
         if game_paused:
