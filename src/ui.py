@@ -1,6 +1,28 @@
 # The UI script for the game 
 
 import pygame
+import os
+
+
+
+
+
+#icons assets 
+dash_icon_path = os.path.join("src", "assets", "ux", "powers_icons", "dash.png")
+repel_icon_path = os.path.join("src", "assets", "ux", "powers_icons", "repel_spell.png")
+shoot_icon_path = os.path.join("src", "assets", "ux", "powers_icons", "repel_spell.png")
+
+
+
+
+dash_icon_image = pygame.image.load(dash_icon_path) if os.path.exists(dash_icon_path) else None
+repel_icon_image = pygame.image.load(repel_icon_path) if os.path.exists(repel_icon_path) else None 
+
+class slider():
+    def __init__(self, x, y, width, height, initial_val=0.4):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.val = max(0.0, min(1, initial_val))
+        self.dragging = False
 
 #menu volume control 
 class slider():
@@ -80,15 +102,23 @@ def draw_pause_menu(screen, font, screen_width, screen_height, bgm_slider, sfx_s
 
 
 #for the ui of the spells lkely for cooldown
-def draw_ability_icons(screen, x , y , size, key_text, current_cooldown, max_cooldown,  color=(100,100,255)):
+def draw_ability_icons(screen, x , y , size, key_text, current_cooldown, max_cooldown, spell_type="dash"):
 
     icon_rect = pygame.Rect(x,y, size, size)
-    pygame.draw.rect(screen, (20, 35, 75), icon_rect, border_radius=6)
-    pygame.draw.rect(screen, color, icon_rect, width=2, border_radius=6)
+    pygame.draw.rect(screen, (45, 30, 20), icon_rect, border_radius=6)
+    pygame.draw.rect(screen, (140, 100, 60), icon_rect, width=2, border_radius=6)
 
-    key_font = pygame.font.SysFont("comicsnas", 16, True)
-    label = key_font.render(key_text, True, (255,255,255))
-    screen.blit(label, (x+20, y+20))
+    icon_img = dash_icon_image if spell_type == "dash" else repel_icon_image
+
+    if icon_img:
+        padding = 0
+        selected_img = pygame.transform.scale(icon_img, (size - padding * 2, size - padding * 2))
+        screen.blit(selected_img, (x + padding, y + padding))
+
+
+    key_font = pygame.font.SysFont("comicsans", 14, True)
+    label = key_font.render(key_text, True, (215, 195, 150))
+    screen.blit(label, (x + 5, y + 3))
 
     if current_cooldown > 0 and max_cooldown > 0:
 
@@ -99,4 +129,11 @@ def draw_ability_icons(screen, x , y , size, key_text, current_cooldown, max_coo
         mask_surf.fill((0,0,0,180))
         screen.blit(mask_surf, (x, y + (size - mask_height)))
         
-      
+
+def draw_skill_hud(screen, screen_height, dash_cooldown, repel_cooldown):
+
+    draw_ability_icons(screen, x=10 , y=screen_height - 70, size=50, key_text="SHIFT", current_cooldown=dash_cooldown,
+                       max_cooldown=300, spell_type="dash")
+
+    draw_ability_icons(screen, x=70, y=screen_height - 70, size=50, key_text="F", current_cooldown=repel_cooldown,
+                       max_cooldown= 300, spell_type="repel")

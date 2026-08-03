@@ -1,9 +1,9 @@
 import pygame
 import os 
 from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI
-from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial
+from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
 from dungeon import build_dungeon
-from ui import slider, draw_pause_menu, draw_ability_icons  
+from ui import slider, draw_pause_menu, draw_ability_icons, draw_skill_hud
 pygame.init()
 
 
@@ -20,6 +20,7 @@ score = 0
 admin_mode = False
 game_state = "MENU"
 game_paused = False
+
 
 
 start_screen_path = os.path.join("src","assets","ux","start_screen.png")
@@ -157,16 +158,18 @@ def render_game(bat_projectiles):
 
     for beam in oneI_beam_spells[:]:
         beam.draw(screen)
-    
+
+    for mana in active_mana_charge[:]:
+        mana.update(wizard)
+        mana.draw(screen)
+        if not mana.active:
+            active_mana_charge.remove(mana)
+
     if room_key.collected and room_key.text_timer >0:
         clear_level_1 = font.render("Level 1 Cleared", True, (0,255,128))
         screen.blit(clear_level_1, (400,400))
-
-    draw_ability_icons(screen, x = 10, y= screen_height - 70, size= 50,
-                       key_text="DASH", current_cooldown=dash_cooldown, max_cooldown=300, color=(80,180,255))
-
-    draw_ability_icons(screen, x=90, y=screen_height - 70, size=50,
-                       key_text="Repelorius", current_cooldown=repel_cooldown, max_cooldown=300, color=(80,180,100))
+        
+    draw_skill_hud(screen, screen_height, dash_cooldown, repel_cooldown)
 
 #SOUND SYSTEM   
 sound_dir = os.path.join('src','assets', 'sounds')
@@ -214,7 +217,7 @@ oneI_spells = []
 oneI_beam_spells = []
 repel_spells = []
 oneI_radial_blast = []
-
+active_mana_charge = []
 
 
 dungeon = build_dungeon()
@@ -660,7 +663,11 @@ while run:
                     wizard.y_pos += wizard.vel 
 
             if keys[pygame.K_PERIOD]:
-                recharge_sound.play()
+                
+                if len(active_mana_charge) == 0:
+                    charge_effect = mana_charge(wizard.x_pos, wizard.y_pos, 128, 128)
+                    active_mana_charge.append(charge_effect)
+                    recharge_sound.play(-1)
                 if wizard.mana < 10:
                     wizard.mana += 1
             else:

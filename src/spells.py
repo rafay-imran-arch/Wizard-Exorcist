@@ -86,6 +86,42 @@ class repel_spell(spells):
 
             screen.blit(scaled_frame, (int(self.x_pos - self.radius), int(self.y_pos - self.radius)))
 
+class mana_charge(spells):
+    def __init__(self, x, y, width=128, height=128):
+        super().__init__(x, y, None)
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height 
+        self.active = True
+
+        self.x = x - (self.width // 4)
+        self.y = y - (self.height // 4)
+
+        self.charge_animation_count = 0
+        self.charge_dir = os.path.join(self.effect_dir, "Impacts", "symmetrical_impact_002", "symmetrical_impact_002_large_blue")
+
+        self.charge_frames = [ pygame.transform.scale(
+            pygame.image.load(os.path.join(self.charge_dir, f"frame{i:04}.png")),
+            (128,128)
+        ) for i in range(4,9)
+        ]
+
+    def update(self, wizard):
+        self.x = wizard.x_pos + (wizard.width // 2) - (self.width // 2)
+        self.y = wizard.y_pos + (wizard.height // 2) - (self.height // 2)
+    def draw(self, screen):
+
+        if not self.active:
+            return
+
+        frame_index = (self.charge_animation_count // 2)
+        if frame_index >= len(self.charge_frames):
+            self.active = False
+            return
+        current_frame = self.charge_frames[frame_index]
+        self.charge_animation_count += 1
+        screen.blit(current_frame, (self.x + 37 , self.y + 40))
 
 class enemy_projectile_bat(spells):
     def __init__(self, x_pos, y_pos, facing):
