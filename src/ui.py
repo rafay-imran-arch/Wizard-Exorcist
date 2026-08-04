@@ -10,13 +10,16 @@ import os
 #icons assets 
 dash_icon_path = os.path.join("src", "assets", "ux", "powers_icons", "dash.png")
 repel_icon_path = os.path.join("src", "assets", "ux", "powers_icons", "repel_spell.png")
-shoot_icon_path = os.path.join("src", "assets", "ux", "powers_icons", "repel_spell.png")
-
+shoot_icon_path = os.path.join("src", "assets", "ux", "powers_icons", "shoot.png")
+recharge_icon_path = os.path.join("src", "assets", "ux", "powers_icons", "recharge.png")
 
 
 
 dash_icon_image = pygame.image.load(dash_icon_path) if os.path.exists(dash_icon_path) else None
 repel_icon_image = pygame.image.load(repel_icon_path) if os.path.exists(repel_icon_path) else None 
+shoot_icon_image = pygame.image.load(shoot_icon_path) if os.path.exists(shoot_icon_path) else None
+recharge_icon_image = pygame.image.load(recharge_icon_path) if os.path.exists(recharge_icon_path) else None
+
 
 class slider():
     def __init__(self, x, y, width, height, initial_val=0.4):
@@ -108,7 +111,14 @@ def draw_ability_icons(screen, x , y , size, key_text, current_cooldown, max_coo
     pygame.draw.rect(screen, (45, 30, 20), icon_rect, border_radius=6)
     pygame.draw.rect(screen, (140, 100, 60), icon_rect, width=2, border_radius=6)
 
-    icon_img = dash_icon_image if spell_type == "dash" else repel_icon_image
+    if spell_type == "dash":
+        icon_img = dash_icon_image
+    elif spell_type == "repel":
+        icon_img = repel_icon_image
+    elif spell_type == "shoot":
+        icon_img = shoot_icon_image
+    elif spell_type == "recharge":
+        icon_img = recharge_icon_image
 
     if icon_img:
         padding = 0
@@ -120,7 +130,7 @@ def draw_ability_icons(screen, x , y , size, key_text, current_cooldown, max_coo
     label = key_font.render(key_text, True, (215, 195, 150))
     screen.blit(label, (x + 5, y + 3))
 
-    if current_cooldown > 0 and max_cooldown > 0:
+    if current_cooldown and max_cooldown and current_cooldown > 0 and max_cooldown > 0:
 
         pct = current_cooldown / max_cooldown
         mask_height = int(size*pct)
@@ -137,3 +147,10 @@ def draw_skill_hud(screen, screen_height, dash_cooldown, repel_cooldown):
 
     draw_ability_icons(screen, x=70, y=screen_height - 70, size=50, key_text="F", current_cooldown=repel_cooldown,
                        max_cooldown= 300, spell_type="repel")
+
+    draw_ability_icons(screen, x =140, y=screen_height - 70, size=50, key_text=",", current_cooldown=0,
+                       max_cooldown= 0, spell_type="shoot")
+
+    draw_ability_icons(screen, x=200, y = screen_height - 70, size=50, key_text=".", current_cooldown=0,
+                        max_cooldown=0, spell_type="recharge")
+    
