@@ -4,9 +4,13 @@ import pygame
 import os
 
 
+#setting up the font assets for the all the texts 
+font_path = "src/assets/ux/font/NicerNightie.ttf"
+custom_font = pygame.font.Font(font_path, 30)
+title_font = pygame.font.Font(font_path, 40)
 
-
-
+if custom_font:
+    custom_font_is = True
 #icons assets 
 dash_icon_path = os.path.join("src", "assets", "ux", "powers_icons", "dash.png")
 repel_icon_path = os.path.join("src", "assets", "ux", "powers_icons", "repel_spell.png")
@@ -20,13 +24,43 @@ repel_icon_image = pygame.image.load(repel_icon_path) if os.path.exists(repel_ic
 shoot_icon_image = pygame.image.load(shoot_icon_path) if os.path.exists(shoot_icon_path) else None
 recharge_icon_image = pygame.image.load(recharge_icon_path) if os.path.exists(recharge_icon_path) else None
 
+start_bg_path = os.path.join("src", "assets", "ux", "start_screen.png")
+start_bg_image = pygame.image.load(start_bg_path) if os.path.exists(start_bg_path) else None
 
-class slider():
-    def __init__(self, x, y, width, height, initial_val=0.4):
+#colors 
+GRAY = (50,50,50)
+LIGHT_GRAY = (80,80,120)
+WHITE = (255,255,255)
+DARK_PANEL = (25,25,35)
+BORDER_PURPLE = (200, 200, 255)
+
+class button():
+    def __init__(self, x, y, width, height, text, font, bg_color=GRAY, hover_color=LIGHT_GRAY, text_color=WHITE):
         self.rect = pygame.Rect(x, y, width, height)
-        self.val = max(0.0, min(1, initial_val))
-        self.dragging = False
+        self.text = text
+        self.font = font
+        self.bg_color = bg_color
+        self.hover_color = hover_color
+        self.text_color = text_color
+        self.is_hovered = False
 
+    def draw(self, surface):
+        color = self.hover_color if self.is_hovered else self.bg_color
+        pygame.draw.rect(surface, color, self.rect, border_radius=8)
+
+        text_surf = self.font.render(self.text, True, self.text_color)
+        text_rect = text_surf.get_rect(center=self.rect.center)
+        surface.blit(text_surf, text_rect)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEMOTION:
+            self.is_hovered = self.rect.collidepoint(event.pos)
+
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.is_hovered:
+                return True
+        return False
+        
 #menu volume control 
 class slider():
     def __init__(self, x, y, width, height, initial_val = 0.5):
@@ -81,19 +115,18 @@ def draw_pause_menu(screen, font, screen_width, screen_height, bgm_slider, sfx_s
     panel_rect = pygame.Rect(px, py, pw, ph)
     pygame.draw.rect(screen, (25, 25, 35), panel_rect, border_radius=10)
     pygame.draw.rect(screen, (70, 70, 100), panel_rect, 3, border_radius=10)
-
-    title_surf = font.render("PAUSED", True, (255, 255, 255))
+    title_surf = font.render("Paused", True, (255, 255, 255))
     screen.blit(title_surf, (screen_width // 2 - title_surf.get_width() // 2, py+30))
 
     bgm_slider.rect.y = py + 105
-    bgm_label = font.render("MUSIC", True, (200, 200, 220))
+    bgm_label = font.render("Music", True, (200, 200, 220))
     bgm_val_text = font.render(f"{int(bgm_slider.val * 100)}%", True, (150, 220, 255))
     screen.blit(bgm_label, (px+30, py+100))
     bgm_slider.draw(screen)
     screen.blit(bgm_val_text, (px + 335, py + 100))
 
     sfx_slider.rect.y = py + 165
-    sfx_label = font.render("SFX", True, (200,200,220))
+    sfx_label = font.render("sfx", True, (200,200,220))
     sfx_val_text = font.render(f"{int(sfx_slider.val * 100)}%", True, (150,220,255))
     screen.blit(sfx_label, (px+ 30, py+160))
     sfx_slider.draw(screen)
@@ -153,4 +186,54 @@ def draw_skill_hud(screen, screen_height, dash_cooldown, repel_cooldown):
 
     draw_ability_icons(screen, x=200, y = screen_height - 70, size=50, key_text=".", current_cooldown=0,
                         max_cooldown=0, spell_type="recharge")
-    
+
+def draw_start_menu(screen, screen_width, screen_height, ply_btn, exit_btn, mouse_pos):
+
+    if start_bg_image:
+        screen.blit(pygame.transform.scale(start_bg_image, (screen_width, screen_height)), (0,0))
+    else:
+        screen.fill((30,30,45))
+
+    title_surf = title_font.render("Wizard Exorcist: Redemption of Falled Castle", True, (180,150,255))
+    screen.blit(title_surf, (screen_width // 2 - title_surf.get_width() // 2, 100))
+
+    ply_btn.is_hovered = ply_btn.rect.collidepoint(mouse_pos)
+    exit_btn.is_hovered = exit_btn.rect.collidepoint(mouse_pos)
+
+    ply_btn.draw(screen)
+    exit_btn.draw(screen)
+
+
+def draw_game_over_screen(screen, font, screen_width, screen_height, score, retry_btn, menu_btn, mouse_pos):
+
+    overlay = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
+    overlay.fill((15, 5, 10, 220))
+    screen.blit(overlay, (0,0))
+
+    pw, ph = 520, 360
+    px = (screen_width - pw) // 2
+    py = (screen_height - ph) // 2
+
+    panel_rect = pygame.Rect(px, py, pw, ph)
+    pygame.draw.rect(screen, (25, 15, 20), panel_rect, border_radius=12)
+
+    title_surf = custom_font.render("The Wizard has Fallen", True, (220, 60, 60))
+    screen.blit(title_surf, (screen_width // 2 - title_surf.get_width() // 2, py+35))
+
+    score = score
+    score_surf = custom_font.render("Final Score: {score}", True, (220,220,240))
+    screen.blit(score_surf, (screen_width // 2 - score_surf.get_width() // 2, py + 145))
+
+    retry_btn.rect.x = screen_width // 2 - 110
+    retry_btn.rect.y = py + 200
+    menu_btn.rect.x = screen_width // 2 - 110
+    menu_btn.rect.y = py + 270
+
+    retry_btn.is_hovered = retry_btn.rect.collidepoint(mouse_pos)
+    menu_btn.is_hovered = menu_btn.rect.collidepoint(mouse_pos)
+
+    retry_btn.draw(screen)
+    menu_btn.draw(screen)
+
+
+

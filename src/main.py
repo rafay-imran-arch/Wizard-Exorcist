@@ -3,7 +3,7 @@ import os
 from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI
 from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
 from dungeon import build_dungeon
-from ui import slider, draw_pause_menu, draw_ability_icons, draw_skill_hud
+from ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen
 pygame.init()
 
 
@@ -21,22 +21,6 @@ admin_mode = False
 game_state = "MENU"
 game_paused = False
 
-
-
-start_screen_path = os.path.join("src","assets","ux","start_screen.png")
-if os.path.exists(start_screen_path):
-    start_screen_bg = pygame.image.load(start_screen_path).convert()
-else:
-    start_screen_bg = None
-
-# start screen ui buttons 
-play_button_rect = pygame.Rect(300,400,200,60)
-exit_button_rect = pygame.Rect(300,470,200,60)
-color_normal = (70, 50, 110)
-color_hover = (128, 100, 255)
-
-
-
 #All the door work
 door_width = 80
 door_depth = 20
@@ -50,59 +34,15 @@ wizard = player(400,200,64,64)
 
 
 
-# likely for version 2
-class revive():
-    
-    def __init__(self, x_pos, y_pos, width, height):
-        self.x_pos = x_pos
-        self.y_pos = y_pos
-        self.width = width
-        self.height = height
-        self.vel = 2
-        self.text = "You have used one health spell"
-        self.health_spell_count = 10
-
-    def draw(self, screen):
-        pass 
-
-    def hit(self):
-        pass
-
-class spell_book():
-
-    def __init__(self, x_pos, y_pos, pointer, cell, row):
-
-        self.x_pos = x_pos
-        self.y_pos = y_pos
-        self.pointer = pointer
-        self.cell = cell
-        self.row = row
-
-        self.graphics = "This thing is yet to be decided as I plan to make something of a gui thing the player can open this up mid commbat " \
-        "then select its spells I will possible give 3 spells to players at most but for the starting levels he can only use one spell" \
-        "then I will decide on the world building on how he gets the book to use other spells or rather learn other spells after deffeating some enemies" \
-        "hmm maybe i want to keep that for the mana regeneration thing or something lets see what I'll do" \
-        "If i really really think hard enought i can add secret chests per room in the castle which appears only once you defeat the enemies" \
-        "after you defeat the enemies in that room the box appears with the scroll of spell which the wizards book absorbs automatically hmmm" \
-        "some animation effect ? or something I'll have to work on this maybe leave this for part 2 I suppose ? " \
-        "these are some insane ideas I hope I am able to complete these" \
-        "also i need to incorportate the system of room lock once the player moves in a room he gets locked in until he defeaths the enemies" \
-        "and then after all enemies die the doors open? like the binding of issac stuff I think i suppose" \
-        "plus what else can I add in this ? I can also incorporte the system of boss fights to make hi mana stronger ? but how many levels do I " \
-        "intend to make for this installment? IDK yet but these are some good ideas and I hope I am able to work on these." \
-        "I also need the enemies to attack the player with some kind of attack? also follow the player around rather that in one straight plane" \
-        "or something" \
-        "i really need to so something about this stuff I need to learn ore and more and more" \
-        "May i be able to finish this game"
+# Font
+custom_font = pygame.font.Font("src/assets/ux/font/NicerNightie.ttf", 30)
 
 
-def all_regular_enemies_defeated(dungeon_dict):
-    for room_key, room in dungeon_dict.items():
-        if getattr(room, 'is_boss_room', False):
-            continue    
-        if len(room.enemies) > 0 or not room.cleared:
-            return False
-    return True
+#ui buttons
+play_btn = button((screen_width // 2) - 120, 380, 240, 60, "Enter Castle", custom_font)
+exit_btn = button((screen_width // 2) - 120, 470, 240, 60, "Abandon", custom_font)
+retry_btn= button(0, 0, 220, 50, "Try Again", custom_font, bg_color=(80,20,20), hover_color=(120,30,30)) 
+menu_btn = button(0, 0, 220,50, "Main Menu", custom_font, bg_color=(40, 40, 50), hover_color=(70,70,90))
 
 #function to make things appear (magically!?) 
 def render_game(bat_projectiles):
@@ -119,7 +59,7 @@ def render_game(bat_projectiles):
         if 'north' in current_room.connections and 'north' not in hidden:
             pygame.draw.rect(screen, (0,0,0), north_door_rect)
         if 'south' in current_room.connections and 'south' not in hidden:
-            pygame.draw.rect(screen, (0,0,0), south_door_rect)
+            pygame.draw.rect(screen,        (0,0,0), south_door_rect)
         if 'east' in current_room.connections and 'east' not in hidden:
             pygame.draw.rect(screen, (0,0,0), east_door_rect)
         if 'west' in current_room.connections and 'west' not in hidden:
@@ -194,7 +134,7 @@ for sfx in sfx_list:
     sfx.set_volume(sfx_slider.val)
 
 
-font = pygame.font.SysFont('comicsans', 30, True)
+font =  pygame.font.Font("src/assets/ux/font/NicerNightie.ttf", 30)
 spell_limit = 5
 
 room_key = keys_drop()
@@ -221,7 +161,6 @@ active_mana_charge = []
 
 
 dungeon = build_dungeon()
-dungeon_stairs_room_key = None # Add this later a cool type looking key which appears only once you kill all the other enemies
 current_room_key = 'spawn room'
 current_room = dungeon[current_room_key]
 enemies = current_room.enemies
@@ -240,9 +179,9 @@ while run:
 
         if game_state == 'MENU':
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if play_button_rect.collidepoint(mouse_pos):
+                if play_btn.handle_event(event):
                     game_state = "PLAYING"
-                elif exit_button_rect.collidepoint(mouse_pos):
+                elif exit_btn.handle_event(event):
                     run = False
 
         if game_state == "PLAYING" and game_paused:
@@ -252,33 +191,25 @@ while run:
             pygame.mixer.music.set_volume(bgm_slider.val)
             for sfx in sfx_list:
                 sfx.set_volume(sfx_slider.val)
-    
+
+        if game_state == "game_over":
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if retry_btn.handle_event(event):
+                    score == 0
+                    wizard.health = wizard.max_health
+                    wizard.is_dying = False
+                    wizard.x_pos, wizard.y_pos = 400, 200
+                    dungeon = build_dungeon()
+                    current_room_key = "spawn room"
+                    current_room = dungeon[current_room_key]
+                    enemies = current_room.enemies
+                    game_state = "PLAYING"
+                elif menu_btn.handle_event(event):
+                    score = 0 
+                    game_state = "MENU"
+        
     if game_state == "MENU":    
-        if start_screen_bg:
-            screen.blit(start_screen_bg, (0,0))
-        else:
-            screen.fill('Grey')
-        
-        if play_button_rect.collidepoint(mouse_pos):
-            pygame.draw.rect(screen, color_hover, play_button_rect, border_radius=10)
-        else:
-            pygame.draw.rect(screen, color_normal, play_button_rect, border_radius=10)
-
-        if exit_button_rect.collidepoint(mouse_pos):
-            pygame.draw.rect(screen, color_hover, exit_button_rect, border_radius=10)
-        else:
-            pygame.draw.rect(screen, color_normal, exit_button_rect, border_radius=10)
-
-        #Display game name on the screen
-        game_name = font.render("Wizard Excorcist: Redemption of the fallen castle", True, (128,100,255))
-        screen.blit(game_name, (200,40))
-        
-        # Play button
-        play_text = font.render("ENTER CASTLE", True, (255,255,255))
-        screen.blit(play_text, (325, 415))
-        # Exit button
-        exit_text = font.render("ABANDON", True, (255,255,255))
-        screen.blit(exit_text, (350, 495))
+        draw_start_menu(screen, screen_width, screen_height, play_btn, exit_btn, mouse_pos)
         
         pygame.display.update()
     
@@ -286,7 +217,7 @@ while run:
         screen.fill((20,10,10))
         victory_text = font.render("Castle Purified!", True, (0,255,128))
         score_text = font.render(f"Grand score: {score}", True, (255,255,255))
-        retry_text = font.render("Press SPACE to return to main menu", True, (150,150,150))
+        retry_text = font.render("Press Space to return to main menu", True, (150,150,150))
 
         screen.blit(victory_text, (260,300))
         screen.blit(score_text, (325,360))
@@ -300,15 +231,11 @@ while run:
             game_state = "MENU"
 
     elif game_state == "game_over":
+        render_game(bat_projectiles)
+
+        draw_game_over_screen(screen, font, screen_width, screen_height, score, retry_btn, menu_btn, mouse_pos)
         screen.fill((20,10,10))
-        over_text = font.render("The wizard has fallen GAME OVER!", True, (255,0,0))
-        score_text = font.render(f"Final score {score}", True, (255,255,255))
-        retry_text = font.render("To revive press space!", True, (150,150,150))
-
-        screen.blit(over_text, (280,300))
-        screen.blit(score_text, (320,360))
-        screen.blit(retry_text, (230, 450))
-
+        
         pygame.display.update()
 
         keys = pygame.key.get_pressed()
@@ -353,8 +280,7 @@ while run:
 
             wizard_rect = pygame.Rect(wizard.hit_box[0], wizard.hit_box[1], wizard.hit_box[2], wizard.hit_box[3])
 
-            if current_room.is_boss_room and not current_room.cleared:
-                pass
+            
 
             new_spawned_enemies = []
 

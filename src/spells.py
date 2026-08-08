@@ -121,7 +121,7 @@ class mana_charge(spells):
             return
         current_frame = self.charge_frames[frame_index]
         self.charge_animation_count += 1
-        screen.blit(current_frame, (self.x + 37 , self.y + 40))
+        screen.blit(current_frame, (self.x + 32 , self.y + 40))
 
 class enemy_projectile_bat(spells):
     def __init__(self, x_pos, y_pos, facing):
