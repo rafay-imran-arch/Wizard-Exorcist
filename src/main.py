@@ -44,22 +44,80 @@ exit_btn = button((screen_width // 2) - 120, 470, 240, 60, "Abandon", custom_fon
 retry_btn= button(0, 0, 220, 50, "Try Again", custom_font, bg_color=(80,20,20), hover_color=(120,30,30)) 
 menu_btn = button(0, 0, 220,50, "Main Menu", custom_font, bg_color=(40, 40, 50), hover_color=(70,70,90))
 
+
+
+
+def start_new_game():
+    global score, dungeon, current_room_key, current_room, enemies
+    global spells, bat_projectiles, oneI_spells, oneI_beam_spells, repel_spells, oneI_radial_blast, active_mana_charge
+    global game_state, game_paused, dash_cooldown, repel_cooldown, player_hit_cooldown
+
+    score = 0
+    wizard.health = wizard.max_health
+    wizard.mana = 10
+    wizard.is_dying = False 
+    wizard.x_pos, wizard.y_pos = 400, 200
+
+    dash_cooldown = 0
+    repel_cooldown = 0
+    player_hit_cooldown = 0
+
+    spells.clear()   
+    bat_projectiles.clear()
+    oneI_spells.clear()
+    oneI_beam_spells.clear()
+    repel_spells.clear()
+    oneI_radial_blast.clear()
+    active_mana_charge.clear()
+    
+    dungeon = build_dungeon()
+    current_room_key = "spawn room"
+    current_room = dungeon[current_room_key]
+    enemies = current_room.enemies
+
+    room_key.visible = False
+    room_key.collected = False 
+
+    game_state = "PLAYING"
+    game_state = "PLAYING"
+
+loaded_backgrounds = {}
+def get_room_background(room):
+
+    path = room.background_path
+
+    if path not in loaded_backgrounds:
+        if os.path.exists(path):
+            image = pygame.image.load(path).convert()
+            loaded_backgrounds[path] = pygame.transform.scale(image, (screen_width, screen_height))
+
+        else: 
+            print(f"Warning: Background image not found at {path}. Using default color")
+            fallback = pygame.Surface((screen_width, screen_height))
+            fallback.fill((40, 40, 40))
+            loaded_backgrounds[path] = fallback
+
+    return loaded_backgrounds[path]
+
+def all_regular_enemies_defeated(dungeon):
+    for key, room in dungeon.items():
+        if not room.is_boss_room and not room.cleared:
+            return False
+    return False 
+ 
 #function to make things appear (magically!?) 
 def render_game(bat_projectiles):
 
 
-    if os.path.exists(current_room.background_path):
-        room_bg = pygame.image.load(current_room.background_path)
-        screen.blit(room_bg, (0,0))
-    else:
-        screen.fill('Grey')
+    room_bg = get_room_background(current_room)
+    screen.blit(room_bg, (0,0))
      
     if current_room.cleared and not room_key.visible:
         hidden = getattr(current_room, 'hidden_doors', [])
         if 'north' in current_room.connections and 'north' not in hidden:
             pygame.draw.rect(screen, (0,0,0), north_door_rect)
         if 'south' in current_room.connections and 'south' not in hidden:
-            pygame.draw.rect(screen,        (0,0,0), south_door_rect)
+            pygame.draw.rect(screen,       (0,0,0), south_door_rect)
         if 'east' in current_room.connections and 'east' not in hidden:
             pygame.draw.rect(screen, (0,0,0), east_door_rect)
         if 'west' in current_room.connections and 'west' not in hidden:
@@ -105,10 +163,7 @@ def render_game(bat_projectiles):
         if not mana.active:
             active_mana_charge.remove(mana)
 
-    if room_key.collected and room_key.text_timer >0:
-        clear_level_1 = font.render("Level 1 Cleared", True, (0,255,128))
-        screen.blit(clear_level_1, (400,400))
-        
+    
     draw_skill_hud(screen, screen_height, dash_cooldown, repel_cooldown)
 
 #SOUND SYSTEM   
@@ -159,7 +214,6 @@ repel_spells = []
 oneI_radial_blast = []
 active_mana_charge = []
 
-
 dungeon = build_dungeon()
 current_room_key = 'spawn room'
 current_room = dungeon[current_room_key]
@@ -180,7 +234,7 @@ while run:
         if game_state == 'MENU':
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if play_btn.handle_event(event):
-                    game_state = "PLAYING"
+                    start_new_game()
                 elif exit_btn.handle_event(event):
                     run = False
 
@@ -195,15 +249,7 @@ while run:
         if game_state == "game_over":
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if retry_btn.handle_event(event):
-                    score == 0
-                    wizard.health = wizard.max_health
-                    wizard.is_dying = False
-                    wizard.x_pos, wizard.y_pos = 400, 200
-                    dungeon = build_dungeon()
-                    current_room_key = "spawn room"
-                    current_room = dungeon[current_room_key]
-                    enemies = current_room.enemies
-                    game_state = "PLAYING"
+                    start_new_game()
                 elif menu_btn.handle_event(event):
                     score = 0 
                     game_state = "MENU"
@@ -227,21 +273,21 @@ while run:
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE]:
-            score = 0
+            start_new_game()
             game_state = "MENU"
 
     elif game_state == "game_over":
         render_game(bat_projectiles)
 
         draw_game_over_screen(screen, font, screen_width, screen_height, score, retry_btn, menu_btn, mouse_pos)
-        screen.fill((20,10,10))
         
         pygame.display.update()
-
+        
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE]:
             score = 0
             game_state = "MENU"
+
 
     # game state playing 
     elif game_state == "PLAYING":

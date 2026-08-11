@@ -5,7 +5,7 @@ pygame.init()
 
 
 class Room():
-    def __init__(self, name, enemy_list, image_name="default_room"):
+    def __init__(self, name, enemy_list, image_folder="rooms", image_name="default_room"):
         self.name = name
         self.enemies = enemy_list
         self.cleared = False
@@ -14,7 +14,7 @@ class Room():
         self.hidden_doors = []
         self.is_boss_room = False
 
-        self.background_path = os.path.join("src","assets",'rooms', f"{image_name}.png")
+        self.background_path = os.path.join("src","assets",image_folder, f"{image_name}.png")
 
 def build_dungeon():
 
@@ -22,13 +22,16 @@ def build_dungeon():
 
     rooms = {
         "spawn room": Room("The spawn point", [
-            oneI(244,555,128,128)  
-        ]),
+            ghost(244,555,128,128)],
+            image_folder = os.path.join("rooms", "spawnroom"),
+            image_name = "spawnroom1"
+            ),
 
         "the solar": Room("The abandoned solar room",[
             slime(200,100,128,128),
-            bat(500,70,128,128)
-        ]),
+            bat(500,70,128,128)]
+            
+            ),
         
         "north vault": Room("The broken vault room",[
             bat(200,50,128,128),
@@ -46,9 +49,10 @@ def build_dungeon():
         'spawn room2' : Room("Lower area of great hall",[
             bat(800,122,128,128),
             bat(400,200,128,128),
-            ghost(300,500,128,128)
-        ]),
-
+            ghost(300,500,128,128)],
+            image_folder = os.path.join("rooms", "spawnroom"),
+            image_name = "spawnroom2"
+        ),
         "lord's chambers": Room('The master bedroom', [
             slime(200,100,128,128),
             slime(100,300,128,128),

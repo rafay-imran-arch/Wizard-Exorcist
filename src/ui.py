@@ -221,7 +221,7 @@ def draw_game_over_screen(screen, font, screen_width, screen_height, score, retr
     screen.blit(title_surf, (screen_width // 2 - title_surf.get_width() // 2, py+35))
 
     score = score
-    score_surf = custom_font.render("Final Score: {score}", True, (220,220,240))
+    score_surf = custom_font.render(f"Final Score: {score}", True, (220,220,240))
     screen.blit(score_surf, (screen_width // 2 - score_surf.get_width() // 2, py + 145))
 
     retry_btn.rect.x = screen_width // 2 - 110
