@@ -20,7 +20,6 @@ score = 0
 admin_mode = False
 game_state = "MENU"
 game_paused = False
-
 #All the door work
 door_width = 80
 door_depth = 20
@@ -99,14 +98,17 @@ def get_room_background(room):
 
     return loaded_backgrounds[path]
 
+for i in range(3):
+    print("Hello")
 def all_regular_enemies_defeated(dungeon):
     for key, room in dungeon.items():
         if not room.is_boss_room and not room.cleared:
             return False
-    return False 
- 
+    return True
+
 #function to make things appear (magically!?) 
 def render_game(bat_projectiles):
+
 
 
     room_bg = get_room_background(current_room)

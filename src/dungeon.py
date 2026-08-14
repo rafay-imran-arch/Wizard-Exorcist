@@ -36,8 +36,10 @@ def build_dungeon():
         "north vault": Room("The broken vault room",[
             bat(200,50,128,128),
             bat(100,200,128,128),
-            bat(600,300,128,128)
-        ]),
+            bat(600,300,128,128)],
+            image_folder = os.path.join("rooms", "northvault"),
+            image_name = "north_vault"
+            ),
 
         "the study": Room("The abandoned Library",[
             slime(500,100,128,128),
@@ -69,8 +71,10 @@ def build_dungeon():
         "spawn room3": Room("south expansion of great hallway",[
             ghost(10,129,128,128),
             ghost(45,650,128,128),
-            pumpkin(500,500,128,128),
-        ]),
+            pumpkin(500,500,128,128)],
+            image_folder= os.path.join("rooms", "spawnroom"),
+            image_name = "spawnroom3"
+            ),
 
         "princes room": Room('The grand room of prince',[
             bat(240,120,128,128),
@@ -107,12 +111,17 @@ def build_dungeon():
         ]),
 
         'north west guard': Room("North west guardroom",[
-            slime(241,124,128,128)
-        ]),
+            slime(241,124,128,128)],
+            image_folder = os.path.join("rooms", "guardrooms"),
+            image_name = "north_west_gr"
+            ),
 
         'south west guard': Room('The south east guradroom/tower', [
-            ghost(412,524,128,128),
-        ]),
+            ghost(412,524,128,128)],
+            image_folder = os.path.join("rooms", "guardrooms"),
+            image_name = "south_west_guard"
+
+            ),
 
         # EAST WING HALLWAY 
 
@@ -136,17 +145,21 @@ def build_dungeon():
         'north east guard': Room("The guardroom/tower of north east", [
             ghost(214,35,128,128),
             ghost(593,129,128,128),
-            ghost(300,295,128,128)
-        ]),
+            ghost(300,295,128,128)],
+            image_folder = os.path.join("rooms", "guardrooms"),
+            image_name = "north_east_gr"
+            ),
 
         'south east guard': Room('The guardroom/tower of south east side', [
             bat(742,400,128,128),
             pumpkin(444,542,128,128),
             ghost(204,729,128,128),
-            ghost(600,600,128,128)
-        ])
-    
-    }
+            ghost(600,600,128,128)],
+            image_folder = os.path.join("rooms", "guardrooms"),
+            image_name = "south_east_gr"
+            )
+            
+}
     
 
     rooms["spawn room"].connections = {'north': "north vault", "east": "the solar", "west": "the study", 'south': "spawn room2"}
