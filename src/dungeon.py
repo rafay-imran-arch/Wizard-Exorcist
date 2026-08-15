@@ -45,8 +45,10 @@ def build_dungeon():
             slime(500,100,128,128),
             slime(600,20,128,128),
             bat(100,200,128,128),
-            bat(200,400,128,128),
-        ]),
+            bat(200,400,128,128)],
+            image_folder = os.path.join("rooms", "the study"),
+            image_name = "thestudy"
+            ),
 
         'spawn room2' : Room("Lower area of great hall",[
             bat(800,122,128,128),

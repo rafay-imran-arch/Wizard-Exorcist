@@ -12,10 +12,8 @@ screen_height = 720
 # Some essentials
 screen = pygame.display.set_mode((screen_width,screen_height))
 pygame.display.set_caption("First Draft WE")
-
 clock = pygame.time.Clock()
 score = 0
-
 # game states
 admin_mode = False
 game_state = "MENU"
