@@ -29,10 +29,11 @@ def build_dungeon():
 
         "the solar": Room("The abandoned solar room",[
             slime(200,100,128,128),
-            bat(500,70,128,128)]
+            bat(500,70,128,128)],
+            image_folder = os.path.join("rooms")
             
             ),
-        
+
         "north vault": Room("The broken vault room",[
             bat(200,50,128,128),
             bat(100,200,128,128),
@@ -49,7 +50,7 @@ def build_dungeon():
             image_folder = os.path.join("rooms", "the study"),
             image_name = "thestudy"
             ),
-
+            
         'spawn room2' : Room("Lower area of great hall",[
             bat(800,122,128,128),
             bat(400,200,128,128),

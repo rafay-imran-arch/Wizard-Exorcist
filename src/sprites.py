@@ -699,3 +699,54 @@ class keys_drop():
 
             active_sprite = self.key_frames[int(self.current_frame)]
             screen.blit(active_sprite, (self.rect.x, self.rect.y))
+
+
+class chest():
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.rect = pygame.Rect(self.x, self.y, 16 , 16)
+        self.visible = False
+        self.collected = False 
+        self.text_timer = 0
+
+        self.current_frame = 0 
+        self.animation_speed = 0.2
+
+        #loading the assets for the chest
+        chest_dir = os.path.join("src", "assets", "chest")
+        chest_mastersheet = pygame.image.load(os.path.join(chest_dir, "chest_e.png"))
+    
+        frame_width = chest_mastersheet.get_width() // 7
+        frame_height = chest_mastersheet.get_height()
+
+        self.chest_frames = [ pygame.transform.scale(
+            chest_mastersheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height)),
+            (128,128)
+        ) for i in range(7)
+        ]
+
+    def spawn(self, min_x = 150, max_x= 1050, min_y= 150, max_y=690):
+        self.x = random.randint(min_x, max_x)
+        self.y = random.randint(min_y, max_y)
+        self.rect.topleft = (self.x, self.y)
+
+        self.visible = True 
+        self.collected = False
+        self.is_opened = False
+        self.current_frame = 0 
+
+
+    def update(self):
+        if self.is_opened:
+            if self.current_frame < len(self.chest_frames) - 1:
+                self.current_frame += self.animation_speed
+
+            if self.current_frame > len(self.chest_frames) - 1:
+                self.current_frame = len(self.chest_frames) - 1
+
+
+    def draw(self, screen):
+        if self.visible:
+            frame_index = int(self.current_frame)
+            screen.blit(self.chest_frames[frame_index], (self.x, self.y))

@@ -1,6 +1,6 @@
 import pygame
 import os 
-from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI
+from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest
 from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
 from dungeon import build_dungeon
 from ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen
@@ -26,8 +26,12 @@ north_door_rect = pygame.Rect((screen_width // 2) - (door_width // 2), 0, door_w
 south_door_rect = pygame.Rect((screen_width // 2)- (door_width // 2), screen_height - door_depth, door_width, door_depth)
 east_door_rect = pygame.Rect(screen_width - door_depth, (screen_height // 2) - (door_width // 2), door_depth, door_width)
 west_door_rect = pygame.Rect(0, (screen_height // 2) - (door_width // 2), door_depth, door_width)
+
+
 #making an player object i.e the magical wizard
 wizard = player(400,200,64,64)
+#making chest object
+room_chest = chest()
 
 
 
@@ -71,6 +75,10 @@ def start_new_game():
     current_room_key = "spawn room"
     current_room = dungeon[current_room_key]
     enemies = current_room.enemies
+
+    room_chest.visible = False
+    room_chest.collected = False
+    room_chest.is_opened = False
 
     room_key.visible = False
     room_key.collected = False 
@@ -138,7 +146,7 @@ def render_game(bat_projectiles):
     room_key.draw(screen)
     for spell in spells:
         spell.draw(screen)
-
+    room_chest.draw(screen)
     #drawing all wizards spells
 
     for spell in repel_spells[:]:
@@ -541,6 +549,8 @@ while run:
                 else:
                     room_key.spawn(min_x= 150, max_x= 1050, min_y= 100, max_y =600 )
 
+                    room_chest.spawn(min_x = 150, max_x = 1050, min_y = 100, max_y = 690)
+
 
             if boss_locked_timer > 0:
                 boss_locked_timer -= 1
@@ -604,6 +614,18 @@ while run:
                     room_key.visible = False
                     room_key.collected = True
                     room_key.text_timer = 150
+
+            if room_chest.visible:
+                room_chest.update()
+
+                if not room_chest.collected and wizard_rect.colliderect(room_chest.rect):
+                    room_chest.collected = True
+                    room_chest.is_opened = True 
+
+
+
+
+
                     
             #check key presses for controls 
             keys = pygame.key.get_pressed()
