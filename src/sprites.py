@@ -174,6 +174,7 @@ class enemy():
 
 
         # assets for death effecs
+        self.spell_dir = os.path.join('src', 'assets', 'spells')
         self.effect_dir = os.path.join('src', 'assets', 'effects', 'eff', 'PNG')
         self.death_dir = os.path.join(self.effect_dir, 'Fantasy Spells', 'spell_poison_001', 'spell_poison_001_small_green')
         self.death_frames = [ pygame.transform.scale(
@@ -705,7 +706,7 @@ class chest():
     def __init__(self):
         self.x = 0
         self.y = 0
-        self.rect = pygame.Rect(self.x, self.y, 16 , 16)
+        self.rect = pygame.Rect(self.x, self.y, 96 , 96)
         self.visible = False
         self.collected = False 
         self.text_timer = 0
@@ -750,3 +751,47 @@ class chest():
         if self.visible:
             frame_index = int(self.current_frame)
             screen.blit(self.chest_frames[frame_index], (self.x, self.y))
+
+
+class hp_particles():
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y 
+        self.rect = pygame.Rect(self.x, self.y, 64, 64)
+        self.is_visible = False
+        self.is_collected = False
+
+        self.current_frame = 0.0
+        self.animation_speed = 0.5
+
+        self.spell_dir = os.path.join('src', 'assets', 'spells')
+        self.heal_dir = os.path.join(self.spell_dir, "HealEffect", 'Frames')
+
+        self.heal_frames = [ pygame.transform.scale(
+            pygame.image.load(os.path.join(self.heal_dir, f"HealEffect_{i:02d}.png")).convert_alpha(),
+            (96, 96)
+        ) for i in range(16)
+        ]
+
+    def trigger(self, chest):
+        self.x = chest.x + (chest.rect.width // 2) - (96 // 2) + 15
+        self.y = chest.y + (chest.rect.height // 2) - (96 // 2) + 10
+
+        self.rect.topleft = (self.x, self.y)
+        self.current_frame = 0.0
+        self.is_visible = True 
+
+
+    def update(self):
+        if self.is_visible:
+            self.current_frame += self.animation_speed
+
+            if self.current_frame >= len(self.heal_frames):
+                self.current_frame = 0.0
+
+
+    def draw(self, screen):
+        if self.is_visible:
+            frame_index = int(self.current_frame)
+            screen.blit(self.heal_frames[frame_index], (self.x, self.y))
+        

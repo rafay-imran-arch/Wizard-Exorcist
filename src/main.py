@@ -1,6 +1,6 @@
 import pygame
 import os 
-from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest
+from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest, hp_particles
 from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
 from dungeon import build_dungeon
 from ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen
@@ -32,8 +32,7 @@ west_door_rect = pygame.Rect(0, (screen_height // 2) - (door_width // 2), door_d
 wizard = player(400,200,64,64)
 #making chest object
 room_chest = chest()
-
-
+heal_particle = hp_particles(200, 200)
 
 # Font
 custom_font = pygame.font.Font("src/assets/ux/font/NicerNightie.ttf", 30)
@@ -104,8 +103,6 @@ def get_room_background(room):
 
     return loaded_backgrounds[path]
 
-for i in range(3):
-    print("Hello")
 def all_regular_enemies_defeated(dungeon):
     for key, room in dungeon.items():
         if not room.is_boss_room and not room.cleared:
@@ -137,16 +134,18 @@ def render_game(bat_projectiles):
         screen.blit(locked_msg, (screen_width // 2 - locked_msg.get_width() // 2, 50))
 
     text = font.render(f'Score: {score}', 1, (255, 0, 0))
+    room_chest.draw(screen)
+    heal_particle.draw(screen)
+
     screen.blit(text, (670, 20))
     wizard.draw(screen) # drawing wizard
-    
+
     #drawing enemy
     for e in enemies:
         e.draw(screen,wizard, offset_y=20, bar_width=50, enemies=enemies)
     room_key.draw(screen)
     for spell in spells:
         spell.draw(screen)
-    room_chest.draw(screen)
     #drawing all wizards spells
 
     for spell in repel_spells[:]:
@@ -171,7 +170,7 @@ def render_game(bat_projectiles):
         if not mana.active:
             active_mana_charge.remove(mana)
 
-    
+
     draw_skill_hud(screen, screen_height, dash_cooldown, repel_cooldown)
 
 #SOUND SYSTEM   
@@ -549,7 +548,7 @@ while run:
                 else:
                     room_key.spawn(min_x= 150, max_x= 1050, min_y= 100, max_y =600 )
 
-                    room_chest.spawn(min_x = 150, max_x = 1050, min_y = 100, max_y = 690)
+                    room_chest.spawn(min_x = 150, max_x = 1050, min_y = 100, max_y = 600)
 
 
             if boss_locked_timer > 0:
@@ -615,16 +614,29 @@ while run:
                     room_key.collected = True
                     room_key.text_timer = 150
 
-            if room_chest.visible:
-                room_chest.update()
-
-                if not room_chest.collected and wizard_rect.colliderect(room_chest.rect):
+            if room_chest.visible and not room_chest.collected:
+                if wizard_rect.colliderect(room_chest.rect):
                     room_chest.collected = True
                     room_chest.is_opened = True 
+                    heal_particle.trigger(room_chest)
+
+                if heal_particle.is_visible and not heal_particle.is_collected:
+                    if wizard_rect.colliderect(heal_particle.rect):
+                        heal_particle.is_collected = True 
+                        heal_particle.is_visible = False 
 
 
+                        room_chest.is_visible = False
+                        room_chest.is_opened = False 
 
 
+                    if all_regular_enemies_defeated(dungeon):
+                        wizard.health = wizard.max_health
+                    else: 
+                        wizard.health = min(wizard.max_health, wizard.health + 3) 
+
+            room_chest.update()
+            heal_particle.update()
 
                     
             #check key presses for controls 
