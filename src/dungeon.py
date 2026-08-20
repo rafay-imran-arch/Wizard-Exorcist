@@ -14,6 +14,8 @@ class Room():
         self.hidden_doors = []
         self.is_boss_room = False
 
+        self.chest_opened = False
+
         self.background_path = os.path.join("src","assets",image_folder, f"{image_name}.png")
 
 def build_dungeon():
@@ -26,12 +28,12 @@ def build_dungeon():
             image_folder = os.path.join("rooms", "spawnroom"),
             image_name = "spawnroom1"
             ),
-
+            
         "the solar": Room("The abandoned solar room",[
             slime(200,100,128,128),
             bat(500,70,128,128)],
-            image_folder = os.path.join("rooms")
-            
+            image_folder = os.path.join("rooms", "solar"),
+            image_name = "solar"
             ),
 
         "north vault": Room("The broken vault room",[
@@ -61,15 +63,19 @@ def build_dungeon():
         "lord's chambers": Room('The master bedroom', [
             slime(200,100,128,128),
             slime(100,300,128,128),
-            slime(600,250,128,128)
-        ]),
+            slime(600,250,128,128)],
+            image_folder = os.path.join("rooms", "lordroom"),
+            image_name = "lordroom"
+            ),
 
         "great dining": Room('The great dining hall',[
             slime(400,120,128,128),
             bat(300,650,128,128),
             ghost(200,450,128,128),
-            ghost(40,28,128,128)
-        ]),
+            ghost(40,28,128,128)],
+            image_folder = os.path.join("rooms", "greatdining"),
+            image_name = "greatdining"
+            ),
 
         "spawn room3": Room("south expansion of great hallway",[
             ghost(10,129,128,128),
@@ -101,17 +107,23 @@ def build_dungeon():
             slime(120,400,128,128),
             pumpkin(213,435,128,128),
             pumpkin(435,213,128,128),
-            ghost(563,124,128,128)
-        ]),
+            ghost(563,124,128,128)],
+            image_folder = os.path.join("rooms", "westhallway"),
+            image_name = "westhallway1"
+            ),
 
         "west wing hallway2": Room("The second part of west wing hallway", [
-            slime(313,124,128,128)
-        ]),
+            slime(313,124,128,128)],
+            image_folder = os.path.join("rooms", "westhallway"),
+            image_name = "westhallway2"
+            ),
 
         "west wing hallway3": Room("The third part fo the west wing hallway", [
             bat(421,145,128,128),
-            ghost(241,632,128,128)
-        ]),
+            ghost(241,632,128,128)],
+            image_folder = os.path.join("rooms", "westhallway3"),
+            image_name = "westhallway3"
+            ),
 
         'north west guard': Room("North west guardroom",[
             slime(241,124,128,128)],
@@ -131,19 +143,25 @@ def build_dungeon():
         'east wing hallway1': Room("The east wing hallway", [
             slime(300,124,128,128),
             bat(543,532,128,128),
-            bat(761,321,128,128)
-        ]),
+            bat(761,321,128,128)],
+            image_folder = os.path.join("rooms", "easthallway"),
+            image_name= "easthallway1"
+            ),
         
         'east wing hallway2': Room("The second part of east wing hallway", [
             ghost(245,12,128,128),
             pumpkin(87,81,128,128),
-            ghost(52,29,128,128)
-        ]),
+            ghost(52,29,128,128)],
+            image_folder = os.path.join("rooms", "easthallway"),
+            image_name= "easthallway2"
+            ),
 
         'east wing hallway3': Room("The third part of the east wing hallway", [
             bat(29,12,128,128),
-            slime(742,124,128,128)
-        ]),
+            slime(742,124,128,128)],
+            image_folder = os.path.join("rooms", "easthallway"),
+            image_name = "easthallway3"
+            ),
 
         'north east guard': Room("The guardroom/tower of north east", [
             ghost(214,35,128,128),

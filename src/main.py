@@ -595,49 +595,65 @@ while run:
                         next_room_key = candidate_key
                         wizard.y_pos = door_depth + 10 
                     
-                    
-
+            #item pickup    
             if next_room_key:
                 current_room_key = next_room_key
                 current_room = dungeon[current_room_key]
                 enemies = current_room.enemies
 
-                if not current_room.cleared:
-                    room_key.visible = False
-                    room_key.collected = False
-                    
+                # Reset all item drop states for the new room
+                room_key.visible = False
+                room_key.collected = False
+                room_chest.visible = False
+                
+                room_chest.collected = False
+                room_chest.is_opened = False
+                heal_particle.is_visible = False
+                heal_particle.is_collected = False
+
+                if len(enemies) == 0:
+                    current_room.cleared = True
+
+                    if current_room.is_boss_room:
+                        game_state = 'victory'
+                    elif not getattr(current_room, 'chest_opened', False):
+                        room_chest.spawn(min_x=150, max_x=1050, min_y=100, max_y=600)
+                        room_chest.visible = True
+                        room_chest.is_opened = False
+
+            # --- Key Pickup ---
             if room_key.visible and not room_key.collected:
-                if  wizard_rect.colliderect(room_key.rect):
+                if wizard_rect.colliderect(room_key.rect):
                     score += 10
                     unlock_sound.play()
                     room_key.visible = False
-                    room_key.collected = True
+                    room_key.collected = True 
                     room_key.text_timer = 150
 
+            # --- Chest Interaction ---
             if room_chest.visible and not room_chest.collected:
                 if wizard_rect.colliderect(room_chest.rect):
                     room_chest.collected = True
                     room_chest.is_opened = True 
+                    current_room.chest_opened = True
                     heal_particle.trigger(room_chest)
 
-                if heal_particle.is_visible and not heal_particle.is_collected:
-                    if wizard_rect.colliderect(heal_particle.rect):
-                        heal_particle.is_collected = True 
-                        heal_particle.is_visible = False 
+            # --- Health Particle Pickup ---
+            if heal_particle.is_visible and not heal_particle.is_collected:
+                if wizard_rect.colliderect(heal_particle.rect):
+                    heal_particle.is_collected = True
+                    heal_particle.is_visible = False
 
-
-                        room_chest.is_visible = False
-                        room_chest.is_opened = False 
-
+                    room_chest.visible = False
+                    room_chest.is_opened = False
 
                     if all_regular_enemies_defeated(dungeon):
                         wizard.health = wizard.max_health
-                    else: 
-                        wizard.health = min(wizard.max_health, wizard.health + 3) 
+                    else:
+                        wizard.health = min(wizard.max_health, wizard.health + 5)
 
             room_chest.update()
             heal_particle.update()
-
                     
             #check key presses for controls 
             keys = pygame.key.get_pressed()

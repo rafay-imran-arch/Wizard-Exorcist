@@ -757,7 +757,7 @@ class hp_particles():
     def __init__(self, x, y):
         self.x = x
         self.y = y 
-        self.rect = pygame.Rect(self.x, self.y, 64, 64)
+        self.rect = pygame.Rect(self.x, self.y, 16, 16)
         self.is_visible = False
         self.is_collected = False
 
