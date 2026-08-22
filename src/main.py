@@ -2,13 +2,13 @@ import pygame
 import asyncio
 import os 
 
+from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest, hp_particles
+from spells import projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
+from dungeon import build_dungeon
+from ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen, draw_victory_screen
 
 async def main():
-    from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest, hp_particles
-    from spells import projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
-    from dungeon import build_dungeon
-    from ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen, draw_victory_screen
-    
+
     pygame.init()
 
     screen_width = 1280
