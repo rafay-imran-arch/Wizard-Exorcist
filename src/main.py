@@ -5,25 +5,49 @@ import os
 
 async def main():
     from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest, hp_particles
-    from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
+    from spells import projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
     from dungeon import build_dungeon
     from ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen, draw_victory_screen
+    
     pygame.init()
-
 
     screen_width = 1280
     screen_height = 720 
-    # Some essentials
-    screen = pygame.display.set_mode((screen_width,screen_height))
+
+    screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Wizard Exorcist")
     clock = pygame.time.Clock()
+
     score = 0
-    # game states
     admin_mode = False
     game_state = "MENU"
     game_paused = False
-    #All the door work
 
+    spells = []
+    bat_projectiles = []
+    oneI_spells = []
+    oneI_beam_spells = []
+    repel_spells = []
+    oneI_radial_blast = []
+    active_mana_charge = []
+
+    dash_cooldown = 0
+    repel_cooldown = 0
+    player_hit_cooldown = 0
+    boss_locked_timer = 0
+    player_death_timer = 0 
+    max_death_frames = 30
+    shoot_loop = 0
+
+    wizard = player(400, 200, 64, 64)
+    room_chest = chest()
+    heal_particle = hp_particles(200, 200)
+    room_key = keys_drop()
+
+    dungeon = build_dungeon()
+    current_room_key = 'spawn room'
+    current_room = dungeon[current_room_key]
+    enemies = current_room.enemies
 
     door_width = 80
     door_depth = 20
@@ -39,39 +63,23 @@ async def main():
             raw_img = pygame.image.load(door_assets).convert_alpha()
             door_frames_horiz.append(pygame.transform.scale(raw_img, (door_width, door_depth)))
             door_frames_vert.append(pygame.transform.scale(raw_img, (door_depth, door_width)))
-        else:
-            print("No assets for this")
-
 
     north_door_rect = pygame.Rect((screen_width // 2) - (door_width // 2), 0, door_width, door_depth)
-    south_door_rect = pygame.Rect((screen_width // 2)- (door_width // 2), screen_height - door_depth, door_width, door_depth)
+    south_door_rect = pygame.Rect((screen_width // 2) - (door_width // 2), screen_height - door_depth, door_width, door_depth)
     east_door_rect = pygame.Rect(screen_width - door_depth, (screen_height // 2) - (door_width // 2), door_depth, door_width)
     west_door_rect = pygame.Rect(0, (screen_height // 2) - (door_width // 2), door_depth, door_width)
 
-
-    #making an player object i.e the magical wizard
-    wizard = player(400,200,64,64)
-    #making chest object
-    room_chest = chest()
-    heal_particle = hp_particles(200, 200)
-
-    # Font
     custom_font = pygame.font.Font("src/assets/ux/font/NicerNightie.ttf", 30)
 
-
-    #ui buttons
     play_btn = button((screen_width // 2) - 120, 380, 240, 60, "Enter Castle", custom_font)
     exit_btn = button((screen_width // 2) - 120, 470, 240, 60, "Abandon", custom_font)
-    retry_btn= button(0, 0, 220, 50, "Try Again", custom_font, bg_color=(80,20,20), hover_color=(120,30,30)) 
-    menu_btn = button(0, 0, 220,50, "Main Menu", custom_font, bg_color=(40, 40, 50), hover_color=(70,70,90))
-
-
-
+    retry_btn = button(0, 0, 220, 50, "Try Again", custom_font, bg_color=(80, 20, 20), hover_color=(120, 30, 30)) 
+    menu_btn = button(0, 0, 220, 50, "Main Menu", custom_font, bg_color=(40, 40, 50), hover_color=(70, 70, 90))
 
     def start_new_game():
-        global score, dungeon, current_room_key, current_room, enemies
-        global spells, bat_projectiles, oneI_spells, oneI_beam_spells, repel_spells, oneI_radial_blast, active_mana_charge
-        global game_state, game_paused, dash_cooldown, repel_cooldown, player_hit_cooldown
+        nonlocal score, dungeon, current_room_key, current_room, enemies
+        nonlocal spells, bat_projectiles, oneI_spells, oneI_beam_spells, repel_spells, oneI_radial_blast, active_mana_charge
+        nonlocal game_state, game_paused, dash_cooldown, repel_cooldown, player_hit_cooldown
 
         score = 0
         wizard.health = wizard.max_health
@@ -104,24 +112,18 @@ async def main():
         room_key.collected = False 
 
         game_state = "PLAYING"
-        game_state = "PLAYING"
 
     loaded_backgrounds = {}
     def get_room_background(room):
-
         path = room.background_path
-
         if path not in loaded_backgrounds:
             if os.path.exists(path):
                 image = pygame.image.load(path).convert()
                 loaded_backgrounds[path] = pygame.transform.scale(image, (screen_width, screen_height))
-
             else: 
-                print(f"Warning: Background image not found at {path}. Using default color")
                 fallback = pygame.Surface((screen_width, screen_height))
                 fallback.fill((40, 40, 40))
                 loaded_backgrounds[path] = fallback
-
         return loaded_backgrounds[path]
 
     def all_regular_enemies_defeated(dungeon):
@@ -130,13 +132,9 @@ async def main():
                 return False
         return True
 
-    #function to make things appear (magically!?) 
     def render_game(bat_projectiles):
-
-
-
         room_bg = get_room_background(current_room)
-        screen.blit(room_bg, (0,0))
+        screen.blit(room_bg, (0, 0))
         
         if current_room.cleared and not room_key.visible:
             hidden = getattr(current_room, 'hidden_doors', [])
@@ -162,7 +160,6 @@ async def main():
                     else:
                         pygame.draw.rect(screen, (80, 50, 180), d_rect)
 
-
         if boss_locked_timer > 0:
             locked_msg = font.render("Boss Door Sealed! Clear all rooms first.", True, (255, 50, 50))
             screen.blit(locked_msg, (screen_width // 2 - locked_msg.get_width() // 2, 50))
@@ -172,20 +169,19 @@ async def main():
         heal_particle.draw(screen)
 
         screen.blit(text, (670, 20))
-        wizard.draw(screen) # drawing wizard
+        wizard.draw(screen)
 
-        #drawing enemy
         for e in enemies:
-            e.draw(screen,wizard, offset_y=20, bar_width=50, enemies=enemies)
+            e.draw(screen, wizard, offset_y=20, bar_width=50, enemies=enemies)
+
         room_key.draw(screen)
+
         for spell in spells:
             spell.draw(screen)
-        #drawing all wizards spells
 
         for spell in repel_spells[:]:
             spell.draw(screen)
 
-        # drawing all enemy spells
         for blast in oneI_radial_blast[:]:
             blast.draw(screen)
 
@@ -204,64 +200,33 @@ async def main():
             if not mana.active:
                 active_mana_charge.remove(mana)
 
-
         draw_skill_hud(screen, screen_height, dash_cooldown, repel_cooldown)
 
-    #SOUND SYSTEM   
-    sound_dir = os.path.join('src','assets', 'sounds')
+    sound_dir = os.path.join('src', 'assets', 'sounds')
     unlock_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'unlock.mp3'))
     recharge_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'recharge.mp3'))
     hurt_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'hurt.mp3'))
     spell_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell.mp3'))
     spell2_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell2.mp3'))
-    game_music = pygame.mixer.music.load(os.path.join(sound_dir, "bg.mp3"))
+    pygame.mixer.music.load(os.path.join(sound_dir, "bg.mp3"))
     pygame.mixer.music.play(-1)
 
     sfx_list = [unlock_sound, recharge_sound, hurt_sound, spell_sound, spell2_sound]
 
-    #audio sliders setting 
     panel_x = (screen_width - 440) // 2
-    bgm_slider = slider(panel_x+130, screen_height // 2 - 30, 200, 16, initial_val=0.5)
+    bgm_slider = slider(panel_x + 130, screen_height // 2 - 30, 200, 16, initial_val=0.5)
     sfx_slider = slider(panel_x + 130, screen_height // 2 - 80, 200, 16, initial_val=0.7)
 
-    # the start volume 
     pygame.mixer.music.set_volume(bgm_slider.val)
     for sfx in sfx_list:
         sfx.set_volume(sfx_slider.val)
 
-
-    font =  pygame.font.Font("src/assets/ux/font/NicerNightie.ttf", 30)
+    font = pygame.font.Font("src/assets/ux/font/NicerNightie.ttf", 30)
     spell_limit = 5
 
-    room_key = keys_drop()
     run = True
-    shoot_loop = 0
 
-    #game timers
-    player_hit_cooldown = 0
-    boss_locked_timer = 0
-    player_death_timer = 0 
-    max_death_frames = 30
-    dash_cooldown = 0
-    repel_cooldown = 0
-
-
-    #game lists
-    spells = []
-    bat_projectiles = []
-    oneI_spells = []
-    oneI_beam_spells = []
-    repel_spells = []
-    oneI_radial_blast = []
-    active_mana_charge = []
-
-    dungeon = build_dungeon()
-    current_room_key = 'spawn room'
-    current_room = dungeon[current_room_key]
-    enemies = current_room.enemies
-    #Main loop
     while run:
-
         mouse_pos = pygame.mouse.get_pos()
         
         for event in pygame.event.get():
@@ -272,7 +237,6 @@ async def main():
                 if event.key == pygame.K_p:
                     game_paused = not game_paused
 
-            
             if game_state == 'MENU':
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if play_btn.handle_event(event):
@@ -288,7 +252,7 @@ async def main():
                 for sfx in sfx_list:
                     sfx.set_volume(sfx_slider.val)
 
-            if game_state == "game_over":
+            if game_state in ("game_over", "victory"):
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if retry_btn.handle_event(event):
                         start_new_game()
@@ -296,18 +260,8 @@ async def main():
                         score = 0 
                         game_state = "MENU"
 
-            if game_state == "victory":
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    if retry_btn.handle_event(event):
-                        start_new_game()
-                    elif menu_btn.handle_event(event):
-                        score = 0 
-                        game_state = "MENU"
-            
-            
         if game_state == "MENU":    
             draw_start_menu(screen, screen_width, screen_height, play_btn, exit_btn, mouse_pos)
-            
             pygame.display.update()
 
         elif game_state == "victory":
@@ -316,9 +270,7 @@ async def main():
 
         elif game_state == "game_over":
             render_game(bat_projectiles)
-
             draw_game_over_screen(screen, font, screen_width, screen_height, score, retry_btn, menu_btn, mouse_pos)
-            
             pygame.display.update()
             
             keys = pygame.key.get_pressed()
@@ -326,10 +278,7 @@ async def main():
                 score = 0
                 game_state = "MENU"
 
-
-        # game state playing 
         elif game_state == "PLAYING":
-
             if not game_paused:
                 if shoot_loop > 0:
                     shoot_loop += 1
@@ -338,7 +287,6 @@ async def main():
 
                 if player_hit_cooldown > 0:
                     player_hit_cooldown -= 1
-
 
                 if room_key.collected and room_key.text_timer > 0:
                     room_key.text_timer -= 1
@@ -350,7 +298,7 @@ async def main():
 
                 active_spells = []
                 for spell in spells[:]:        
-                    if (spell.x_pos < screen_width and spell.x_pos > 0) and (spell.y_pos < screen_height and spell.y_pos > 0):
+                    if (0 < spell.x_pos < screen_width) and (0 < spell.y_pos < screen_height):
                         if spell.facing == "right":
                             spell.x_pos += spell.vel
                         elif spell.facing == "left":
@@ -363,13 +311,9 @@ async def main():
                 spells = active_spells
 
                 wizard_rect = pygame.Rect(wizard.hit_box[0], wizard.hit_box[1], wizard.hit_box[2], wizard.hit_box[3])
-
-                
-
                 new_spawned_enemies = []
 
                 for enemy in enemies:
-
                     if getattr(enemy, 'is_dying', False) or not enemy.visible:
                         continue
                     
@@ -384,58 +328,28 @@ async def main():
                         enemy.y = screen_height - enemy.hit_box[3]
 
                     enemy.hit_box = (enemy.x, enemy.y, enemy.hit_box[2], enemy.hit_box[3])
-
                     enemy_rect = pygame.Rect(enemy.hit_box[0], enemy.hit_box[1], enemy.hit_box[2], enemy.hit_box[3])
                     
-                    #Position of bat spit
                     if hasattr(enemy, 'type') and enemy.type == "bat":
                         enemy.shoot_cooldown -= 1
-
                         if enemy.shoot_cooldown <= 0:
                             dx = wizard.x_pos - enemy.x
                             dy = wizard.y_pos - enemy.y
-
-                            if abs(dx) > abs (dy):
-                                if dx > 0:
-                                    spit_dirc = "right"
-                                else:
-                                    spit_dirc = "left"
-                            else:
-                                if dy > 0:
-                                    spit_dirc = "downwards"
-                                else:
-                                    spit_dirc = "upwards"
-
-                
-
+                            spit_dirc = "right" if dx > 0 else "left" if abs(dx) > abs(dy) else "downwards" if dy > 0 else "upwards"
                             new_spit = enemy_projectile_bat(enemy.x + 56, enemy.y + 56, spit_dirc)
                             bat_projectiles.append(new_spit)
                             enemy.shoot_cooldown = enemy.max_cooldown
 
-
-                    #position of oneI shoot
                     if hasattr(enemy, 'type') and enemy.type == "oneI":
                         enemy.shoot_cooldown -= 1
-
                         if enemy.shoot_cooldown <= 0:
                             dx = wizard.x_pos - enemy.x 
                             dy = wizard.y_pos - enemy.y
-                            
-                            if abs(dx) > abs (dy):
-                                if dx < 0:
-                                    shoot_dirc = "left"
-                                else: 
-                                    shoot_dirc = "right"
-                            else:
-                                if dy < 0:
-                                    shoot_dirc = "upwards"
-                                else: 
-                                    shoot_dirc = "downwards"
-                            
-                            new_shoot = oneI_spell(enemy.x+48, enemy.y+18, shoot_dirc)
+                            shoot_dirc = "right" if dx > 0 else "left" if abs(dx) > abs(dy) else "downwards" if dy > 0 else "upwards"
+                            new_shoot = oneI_spell(enemy.x + 48, enemy.y + 18, shoot_dirc)
                             oneI_spells.append(new_shoot)
                             enemy.shoot_cooldown = enemy.max_shoot_cooldown
-                        #oneI beam 
+
                         enemy.beam_cooldown -= 1
                         if enemy.beam_cooldown <= 0:
                             oneI_beam_spells.append(oneI_beam(screen_width, screen_height))
@@ -447,50 +361,40 @@ async def main():
                             wizard.hit(enemy.damage)
                             if score > 0:
                                 score -= 2
-                            else:
-                                score -= 0
                             player_hit_cooldown = 30
 
                     if enemy.visible and not getattr(enemy, 'is_dying', False):
                         for spell in spells[:]:
-                                spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
+                            spell_rect = pygame.Rect(spell.x_pos, spell.y_pos, 16, 16)
+                            if enemy_rect.colliderect(spell_rect):
+                                enemy.hit()
+                                score += 1
+                                if spell in spells:
+                                    spells.remove(spell)
+                                if isinstance(enemy, slime) and enemy.is_dying and not getattr(enemy, 'is_small', False):
+                                    slime_a = slime(enemy.x, enemy.y, 64, 64, is_small=True)
+                                    slime_b = slime(enemy.x, enemy.y + 25, 64, 64, is_small=True)
+                                    new_spawned_enemies.extend([slime_a, slime_b])
+                                break
 
-                                if enemy_rect.colliderect(spell_rect):
-                                    enemy.hit()
-                                    score += 1
-
-                                    if spell in spells:
-                                        spells.remove(spell)
-
-                                    # the hectic slime splits 
-                                    if (isinstance(enemy, slime) and enemy.is_dying and not getattr(enemy, 'is_small', False)):
-                                        slime_a = slime(enemy.x, enemy.y, 64, 64, is_small=True)
-                                        slime_b = slime(enemy.x, enemy.y+25, 64, 64, is_small=True)
-                                        new_spawned_enemies.extend([slime_a, slime_b])
-                                    break
-                    # oneI radial blast 
                     if hasattr(enemy, 'type') and enemy.type == "oneI":
                         if enemy.radial_cooldown > 0:
                             enemy.radial_cooldown -= 1
                         else:
-                            new_burst = oneI_radial_burst(enemy.x +32, enemy.y + 32, num_shoots=12)
+                            new_burst = oneI_radial_burst(enemy.x + 32, enemy.y + 32, num_shoots=12)
                             oneI_radial_blast.append(new_burst)
                             enemy.radial_cooldown = 240
                     
                 if new_spawned_enemies: 
                     enemies.extend(new_spawned_enemies)
-                
-                # Wizard repel spell
 
                 for spell in repel_spells[:]:
                     spell.update(enemies)
                     if not spell.active:
                         repel_spells.remove(spell)
 
-                #oneI shoot collision code 
                 for shoot in oneI_spells[:]:
                     shoot.update()    
-                
                     shoot_rect = pygame.Rect(shoot.x_pos, shoot.y_pos, 16, 16)
                     if shoot_rect.colliderect(wizard_rect):
                         if player_hit_cooldown == 0:
@@ -503,13 +407,10 @@ async def main():
                         oneI_spells.remove(shoot)
                         continue
                     
-                    if (shoot.x_pos < 0 or shoot.x_pos > screen_width or
-                        shoot.y_pos < 0 or shoot.y_pos > screen_height):
+                    if not (0 <= shoot.x_pos <= screen_width and 0 <= shoot.y_pos <= screen_height):
                         shoot.active = False
                         oneI_spells.remove(shoot)
-                    
-                
-                #oneI beam collision code
+
                 for beam in oneI_beam_spells[:]:
                     cooldown_val = beam.update(wizard_rect, wizard, player_hit_cooldown, hurt_sound)
                     if cooldown_val > 0:
@@ -519,22 +420,13 @@ async def main():
                     if not beam.active:
                         oneI_beam_spells.remove(beam)
 
-                #oneI radial burst code 
                 for blast in oneI_radial_blast[:]:
-                    
                     if isinstance(blast, oneI_radial_burst):
-                        casting_enemy = None
-                        for e in enemies:
-                            if hasattr(e, "type") and e.type == "oneI":
-                                if abs((e.x + 32) - blast.x_pos) < 50 and abs((e.y + 32) - blast.y_pos) < 50:
-                                    casting_enemy = e  
-                                    break
+                        casting_enemy = next((e for e in enemies if hasattr(e, "type") and e.type == "oneI" and abs((e.x + 32) - blast.x_pos) < 50 and abs((e.y + 32) - blast.y_pos) < 50), None)
                         blast.update(oneI_radial_blast, screen_width, screen_height, casting_enemy)
-
                     elif isinstance(blast, oneI_radial):
                         blast.update(screen_width, screen_height)
-                        
-                        blast_rect = pygame.Rect(blast.x_pos-4, blast.y_pos -4, 8,8)
+                        blast_rect = pygame.Rect(blast.x_pos - 4, blast.y_pos - 4, 8, 8)
                         if blast_rect.colliderect(wizard_rect) and player_hit_cooldown == 0:
                             hurt_sound.play()
                             wizard.hit(9)
@@ -544,12 +436,9 @@ async def main():
                     if not blast.active:
                         oneI_radial_blast.remove(blast)
 
-                #Bat spit collision code
                 for spit in bat_projectiles[:]:
                     spit.update()
-
-                    spit_rect = pygame.Rect(spit.x_pos, spit.y_pos, 16,16)
-
+                    spit_rect = pygame.Rect(spit.x_pos, spit.y_pos, 16, 16)
                     if spit_rect.colliderect(wizard_rect):
                         if player_hit_cooldown == 0:
                             hurt_sound.play()
@@ -561,38 +450,33 @@ async def main():
                         bat_projectiles.remove(spit)
                         continue
                     
-                    if (spit.x_pos < 0 or spit.x_pos > screen_width or
-                        spit.y_pos < 0 or spit.y_pos > screen_height):
+                    if not (0 <= spit.x_pos <= screen_width and 0 <= spit.y_pos <= screen_height):
                         spit.active = False
                         bat_projectiles.remove(spit)
 
-                
-                        
                 enemies = [e for e in current_room.enemies if e.visible or e.is_dying]
                 current_room.enemies = enemies
                 
                 if len(enemies) == 0 and not current_room.cleared:
                     current_room.cleared = True 
-
                     if current_room.is_boss_room:
                         game_state = "victory"
                     else:
-                        room_key.spawn(min_x= 150, max_x= 1050, min_y= 100, max_y =600 )
-
-                        room_chest.spawn(min_x = 150, max_x = 1050, min_y = 100, max_y = 600)
+                        room_key.spawn(min_x=150, max_x=1050, min_y=100, max_y=600)
+                        room_chest.spawn(min_x=150, max_x=1050, min_y=100, max_y=600)
 
                 if current_room.is_boss_room:
                     boss_alive = any(hasattr(e, 'type') and e.type == 'oneI' and (e.visible or getattr(e, 'health', 1) > 0) for e in enemies)
                     if not boss_alive:
                         current_room.cleared = True 
                         game_state = "victory"
+
                 next_room_key = None
 
                 if current_room.cleared and not room_key.visible:
-                    #East and west doors
                     if wizard_rect.colliderect(east_door_rect) and 'east' in current_room.connections:
                         candidate_key = current_room.connections['east']
-                        if dungeon[candidate_key].is_boss_room and not  all_regular_enemies_defeated(dungeon):
+                        if dungeon[candidate_key].is_boss_room and not all_regular_enemies_defeated(dungeon):
                             wizard.x_pos -= 15
                             boss_locked_timer = 60
                         else:
@@ -608,8 +492,6 @@ async def main():
                             next_room_key = candidate_key 
                             wizard.x_pos = screen_width - 128 - door_depth - 10
 
-
-                    #North and south doors
                     if wizard_rect.colliderect(north_door_rect) and 'north' in current_room.connections:
                         candidate_key = current_room.connections['north']
                         if dungeon[candidate_key].is_boss_room and not all_regular_enemies_defeated(dungeon):
@@ -618,6 +500,7 @@ async def main():
                         else:
                             next_room_key = candidate_key 
                             wizard.y_pos = screen_height - 128 - door_depth - 10
+
                     elif wizard_rect.colliderect(south_door_rect) and 'south' in current_room.connections:
                         candidate_key = current_room.connections['south']
                         if dungeon[candidate_key].is_boss_room and not all_regular_enemies_defeated(dungeon):
@@ -627,17 +510,14 @@ async def main():
                             next_room_key = candidate_key
                             wizard.y_pos = door_depth + 10 
                         
-                #item pickup    
                 if next_room_key:
                     current_room_key = next_room_key
                     current_room = dungeon[current_room_key]
                     enemies = current_room.enemies
 
-                    # Reset all item drop states for the new room
                     room_key.visible = False
                     room_key.collected = False
                     room_chest.visible = False
-                    
                     room_chest.collected = False
                     room_chest.is_opened = False
                     heal_particle.is_visible = False
@@ -645,7 +525,6 @@ async def main():
 
                     if len(enemies) == 0:
                         current_room.cleared = True
-
                         if current_room.is_boss_room:
                             game_state = 'victory'
                         elif not getattr(current_room, 'chest_opened', False):
@@ -653,7 +532,6 @@ async def main():
                             room_chest.visible = True
                             room_chest.is_opened = False
 
-                # --- Key Pickup ---
                 if room_key.visible and not room_key.collected:
                     if wizard_rect.colliderect(room_key.rect):
                         score += 10
@@ -662,7 +540,6 @@ async def main():
                         room_key.collected = True 
                         room_key.text_timer = 150
 
-                # --- Chest Interaction ---
                 if room_chest.visible and not room_chest.collected:
                     if wizard_rect.colliderect(room_chest.rect):
                         room_chest.collected = True
@@ -670,12 +547,10 @@ async def main():
                         current_room.chest_opened = True
                         heal_particle.trigger(room_chest)
 
-                # --- Health Particle Pickup ---
                 if heal_particle.is_visible and not heal_particle.is_collected:
                     if wizard_rect.colliderect(heal_particle.rect):
                         heal_particle.is_collected = True
                         heal_particle.is_visible = False
-
                         room_chest.visible = False
                         room_chest.is_opened = False
 
@@ -687,11 +562,10 @@ async def main():
                 room_chest.update()
                 heal_particle.update()
                         
-                #check key presses for controls 
                 keys = pygame.key.get_pressed()
                 wizard.is_moving = False
 
-                if  keys[pygame.K_a]:
+                if keys[pygame.K_a]:
                     wizard.facing = "left"
                     wizard.is_moving = True
                     if wizard.hit_box[0] > 0:
@@ -703,7 +577,6 @@ async def main():
                     if wizard.hit_box[0] + wizard.hit_box[2] < screen_width:
                         wizard.x_pos += wizard.vel
 
-                
                 if keys[pygame.K_w]:
                     wizard.facing = "upwards"
                     wizard.is_moving = True 
@@ -717,7 +590,6 @@ async def main():
                         wizard.y_pos += wizard.vel 
 
                 if keys[pygame.K_PERIOD]:
-                    
                     if len(active_mana_charge) == 0:
                         charge_effect = mana_charge(wizard.x_pos, wizard.y_pos, 128, 128)
                         active_mana_charge.append(charge_effect)
@@ -730,15 +602,12 @@ async def main():
                 if repel_cooldown > 0:
                     repel_cooldown -= 1
                 if keys[pygame.K_f]:
-                    
-                    if len(repel_spells) == 0 and repel_cooldown == 0 and wizard.mana >=3:
+                    if len(repel_spells) == 0 and repel_cooldown == 0 and wizard.mana >= 3:
                         spell2_sound.play()
                         wizard.mana -= 3
                         repel_cooldown = 300
-
                         center_x = wizard.x_pos + wizard.character_size[0] // 2
                         center_y = wizard.y_pos + wizard.character_size[1] // 2
-
                         new_repel = repel_spell(center_x, center_y, wizard.facing)
                         repel_spells.append(new_repel)
                 
@@ -746,14 +615,13 @@ async def main():
                     if wizard.mana > 0 and len(spells) < spell_limit:
                         wizard.mana -= 1
                         spell_sound.play()
-                        spells.append(projectile_spell(round(wizard.x_pos + wizard.width//2), round(wizard.y_pos + wizard.height//2), wizard.facing))
+                        spells.append(projectile_spell(round(wizard.x_pos + wizard.width // 2), round(wizard.y_pos + wizard.height // 2), wizard.facing))
                     shoot_loop = 1  
                 
                 if dash_cooldown > 0:
                     dash_cooldown -= 1
                 if keys[pygame.K_LSHIFT] and dash_cooldown == 0 and wizard.mana >= 2:
                     dash_cooldown = 300
-
                     dash_dist = 70
                     if wizard.facing == "left" and wizard.hit_box[0] - dash_dist > 0:
                         wizard.x_pos -= dash_dist
@@ -767,42 +635,29 @@ async def main():
                     elif wizard.facing == "downwards" and wizard.hit_box[1] + wizard.hit_box[3] + dash_dist < screen_height:
                         wizard.y_pos += dash_dist
                         wizard.mana -= 2
-                
+
+                if boss_locked_timer > 0:
+                    boss_locked_timer -= 1
 
             render_game(bat_projectiles)
 
             if game_paused:
                 draw_pause_menu(screen, font, screen_width, screen_height, bgm_slider, sfx_slider)
 
-            pygame.display.update()
-            clock.tick(30)
-
         elif game_state == "Dying":
             render_game(bat_projectiles)
-            wizard.play_death_animation(screen)  
+            if hasattr(wizard, 'play_death_animation'):
+                wizard.play_death_animation(screen)  
 
             player_death_timer -= 1
-
             if player_death_timer <= 0:
                 game_state = "game_over"
-                score = 0
-                wizard.health = wizard.max_health
-                wizard.is_dying = False
-                wizard.x_pos, wizard.y_pos = 400,200
-                current_room_key = "spawn room"
-                current_room = dungeon[current_room_key]
-                enemies = current_room.enemies
-                room_key.visible = False
-                room_key.collected = False  
 
-            pygame.display.update()
-            clock.tick(30)
-            await asyncio.sleep(0)
-                                
+        pygame.display.update()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
     pygame.quit()
 
-asyncio.run(main())
-
-
-
-
+if __name__ == "__main__":
+    asyncio.run(main())

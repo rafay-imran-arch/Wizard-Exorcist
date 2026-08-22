@@ -119,7 +119,6 @@ class player():
     
         # collision hitbox
         self.hit_box = (self.x_pos + 32, self.y_pos + 25, 64, 90)
-        pygame.draw.rect(screen, (0,255,0), self.hit_box, 2)
 
         #Mana and Health bar
         pygame.draw.rect(screen, (255,128,140), (self.hit_box[0], self.hit_box[1]-20 , 80, 10))
@@ -306,7 +305,6 @@ class ghost(enemy):
             hit_w = self.width - (2 * pad_x)
             hit_h = self.height - (2 * pad_y)
             self.hit_box = (hit_x, hit_y, hit_w, hit_h)
-            pygame.draw.rect(screen, (255, 0, 0), self.hit_box, 2)
 
             super().draw(screen, offset_y, bar_width)
 
@@ -371,7 +369,7 @@ class bat(enemy):
             hit_w = self.width - (2 * pad_x)
             hit_h = self.height - (2 * pad_y)
             self.hit_box = (hit_x, hit_y, hit_w, hit_h)
-            pygame.draw.rect(screen, (255, 0, 0), self.hit_box, 2)
+            
 
 
             super().draw(screen, offset_y, bar_width)
@@ -459,7 +457,6 @@ class slime(enemy):
             hit_w = self.width - (2 * pad_x)
             hit_h = self.height - (2 * pad_y)
             self.hit_box = (hit_x, hit_y, hit_w, hit_h)
-            pygame.draw.rect(screen, (255, 0, 0), self.hit_box, 2)
 
             super().draw(screen, offset_y, bar_width)
 
@@ -662,7 +659,6 @@ class oneI(enemy):
         hit_w = self.width - (2 * pad_x)
         hit_h = self.height - (2 * pad_y)
         self.hit_box = (hit_x, hit_y, hit_w, hit_h)
-        pygame.draw.rect(screen, (255, 0, 0), self.hit_box, 2)
 
         super().draw(screen, offset_y, bar_width)
 
