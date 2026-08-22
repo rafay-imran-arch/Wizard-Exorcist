@@ -128,7 +128,7 @@ def build_dungeon():
         "west wing hallway3": Room("The third part fo the west wing hallway", [
             bat(421,145,128,128),
             ghost(241,632,128,128)],
-            image_folder = os.path.join("rooms", "westhallway3"),
+            image_folder = os.path.join("rooms", "westhallway"),
             image_name = "westhallway3"
             ),
 
@@ -141,7 +141,7 @@ def build_dungeon():
         'south west guard': Room('The south east guradroom/tower', [
             ghost(412,524,128,128)],
             image_folder = os.path.join("rooms", "guardrooms"),
-            image_name = "south_west_guard"
+            image_name = "south_west_gr"
 
             ),
 
