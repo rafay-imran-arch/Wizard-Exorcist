@@ -268,9 +268,6 @@ while run:
             if event.key == pygame.K_p:
                 game_paused = not game_paused
 
-            if event.key == pygame.K_v:
-                current_room.cleared = True
-                game_state = "victory"
         
         if game_state == 'MENU':
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
