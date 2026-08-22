@@ -3,7 +3,7 @@ import os
 from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest, hp_particles
 from spells import spells, projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
 from dungeon import build_dungeon
-from ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen
+from ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen, draw_victory_screen
 pygame.init()
 
 
@@ -11,7 +11,7 @@ screen_width = 1280
 screen_height = 720 
 # Some essentials
 screen = pygame.display.set_mode((screen_width,screen_height))
-pygame.display.set_caption("First Draft WE")
+pygame.display.set_caption("Wizard Exorcist")
 clock = pygame.time.Clock()
 score = 0
 # game states
@@ -19,8 +19,25 @@ admin_mode = False
 game_state = "MENU"
 game_paused = False
 #All the door work
+
+
 door_width = 80
 door_depth = 20
+door_frame_count = 10
+door_frames_horiz = []
+door_frames_vert = []
+
+for i in range(door_frame_count):
+    filename = f"frame{i:04d}.png"
+    door_assets = os.path.join("src", "assets", "effects", "eff", "PNG", "Explosions", "doors", "large", filename)
+    
+    if os.path.exists(door_assets):
+        raw_img = pygame.image.load(door_assets).convert_alpha()
+        door_frames_horiz.append(pygame.transform.scale(raw_img, (door_width, door_depth)))
+        door_frames_vert.append(pygame.transform.scale(raw_img, (door_depth, door_width)))
+    else:
+        print("No assets for this")
+
 
 north_door_rect = pygame.Rect((screen_width // 2) - (door_width // 2), 0, door_width, door_depth)
 south_door_rect = pygame.Rect((screen_width // 2)- (door_width // 2), screen_height - door_depth, door_width, door_depth)
@@ -119,15 +136,28 @@ def render_game(bat_projectiles):
      
     if current_room.cleared and not room_key.visible:
         hidden = getattr(current_room, 'hidden_doors', [])
-        if 'north' in current_room.connections and 'north' not in hidden:
-            pygame.draw.rect(screen, (0,0,0), north_door_rect)
-        if 'south' in current_room.connections and 'south' not in hidden:
-            pygame.draw.rect(screen,       (0,0,0), south_door_rect)
-        if 'east' in current_room.connections and 'east' not in hidden:
-            pygame.draw.rect(screen, (0,0,0), east_door_rect)
-        if 'west' in current_room.connections and 'west' not in hidden:
-            pygame.draw.rect(screen, (0,0,0), west_door_rect)
-    
+        
+        if door_frames_horiz:
+            frame_index = (pygame.time.get_ticks() // 100) % len(door_frames_horiz)
+            portal_h = door_frames_horiz[frame_index]
+            portal_v = door_frames_vert[frame_index]
+        else:
+            portal_h = portal_v = None
+
+        doors = [
+            ('north', north_door_rect, portal_h),
+            ('south', south_door_rect, portal_h),
+            ('east',  east_door_rect,  portal_v),
+            ('west',  west_door_rect,  portal_v)
+        ]
+
+        for d_name, d_rect, frame_img in doors:
+            if d_name in current_room.connections and d_name not in hidden:
+                if frame_img:
+                    screen.blit(frame_img, d_rect.topleft)
+                else:
+                    pygame.draw.rect(screen, (80, 50, 180), d_rect)
+
 
     if boss_locked_timer > 0:
         locked_msg = font.render("Boss Door Sealed! Clear all rooms first.", True, (255, 50, 50))
@@ -238,6 +268,10 @@ while run:
             if event.key == pygame.K_p:
                 game_paused = not game_paused
 
+            if event.key == pygame.K_v:
+                current_room.cleared = True
+                game_state = "victory"
+        
         if game_state == 'MENU':
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if play_btn.handle_event(event):
@@ -260,28 +294,24 @@ while run:
                 elif menu_btn.handle_event(event):
                     score = 0 
                     game_state = "MENU"
+
+        if game_state == "victory":
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if retry_btn.handle_event(event):
+                    start_new_game()
+                elif menu_btn.handle_event(event):
+                    score = 0 
+                    game_state = "MENU"
+        
         
     if game_state == "MENU":    
         draw_start_menu(screen, screen_width, screen_height, play_btn, exit_btn, mouse_pos)
         
         pygame.display.update()
-    
+
     elif game_state == "victory":
-        screen.fill((20,10,10))
-        victory_text = font.render("Castle Purified!", True, (0,255,128))
-        score_text = font.render(f"Grand score: {score}", True, (255,255,255))
-        retry_text = font.render("Press Space to return to main menu", True, (150,150,150))
-
-        screen.blit(victory_text, (260,300))
-        screen.blit(score_text, (325,360))
-        screen.blit(retry_text, (230, 450))
-
+        draw_victory_screen(screen, font, screen_width, screen_height, score, menu_btn, retry_btn, mouse_pos)
         pygame.display.update()
-
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            start_new_game()
-            game_state = "MENU"
 
     elif game_state == "game_over":
         render_game(bat_projectiles)
@@ -445,7 +475,7 @@ while run:
                         new_burst = oneI_radial_burst(enemy.x +32, enemy.y + 32, num_shoots=12)
                         oneI_radial_blast.append(new_burst)
                         enemy.radial_cooldown = 240
-
+                
             if new_spawned_enemies: 
                 enemies.extend(new_spawned_enemies)
                
@@ -550,10 +580,11 @@ while run:
 
                     room_chest.spawn(min_x = 150, max_x = 1050, min_y = 100, max_y = 600)
 
-
-            if boss_locked_timer > 0:
-                boss_locked_timer -= 1
-
+            if current_room.is_boss_room:
+                boss_alive = any(hasattr(e, 'type') and e.type == 'oneI' and (e.visible or getattr(e, 'health', 1) > 0) for e in enemies)
+                if not boss_alive:
+                    current_room.cleared = True 
+                    game_state = "victory"
             next_room_key = None
 
             if current_room.cleared and not room_key.visible:
@@ -650,7 +681,7 @@ while run:
                     if all_regular_enemies_defeated(dungeon):
                         wizard.health = wizard.max_health
                     else:
-                        wizard.health = min(wizard.max_health, wizard.health + 5)
+                        wizard.health = min(wizard.max_health, wizard.health + 7)
 
             room_chest.update()
             heal_particle.update()

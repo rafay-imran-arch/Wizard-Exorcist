@@ -7,7 +7,7 @@ import os
 #setting up the font assets for the all the texts 
 font_path = "src/assets/ux/font/NicerNightie.ttf"
 custom_font = pygame.font.Font(font_path, 30)
-title_font = pygame.font.Font(font_path, 40)
+title_font = pygame.font.Font(font_path, 60)
 
 if custom_font:
     custom_font_is = True
@@ -194,7 +194,7 @@ def draw_start_menu(screen, screen_width, screen_height, ply_btn, exit_btn, mous
     else:
         screen.fill((30,30,45))
 
-    title_surf = title_font.render("Wizard Exorcist: Redemption of Falled Castle", True, (180,150,255))
+    title_surf = title_font.render("Wizard Exorcist: Redemption of Fallen Castle", True, (224, 130, 255))
     screen.blit(title_surf, (screen_width // 2 - title_surf.get_width() // 2, 100))
 
     ply_btn.is_hovered = ply_btn.rect.collidepoint(mouse_pos)
@@ -235,5 +235,24 @@ def draw_game_over_screen(screen, font, screen_width, screen_height, score, retr
     retry_btn.draw(screen)
     menu_btn.draw(screen)
 
+def draw_victory_screen(screen, font, screen_width, screen_height, score, menu_btn, retry_btn, mouse_pos):
+    screen.fill((15,25,20))
+
+    victory_text = font.render("Castle Purified!", True, (0, 255, 128))
+    screen.blit(victory_text, (screen_width // 2 - victory_text.get_width() // 2, 200))
+
+    score_text = font.render(f"Grand Score: {score}", True, (240, 240, 240))
+    screen.blit(score_text, (screen_width // 2 - score_text.get_width() // 2, 260))
+
+    retry_btn.rect.x = (screen_width // 2) - 110
+    retry_btn.rect.y = 350
+    retry_btn.is_hovered = retry_btn.rect.collidepoint(mouse_pos)
+
+    menu_btn.rect.x = (screen_width // 2) - 110
+    menu_btn.rect.y = 430
+    menu_btn.is_hovered = menu_btn.rect.collidepoint(mouse_pos)
+
+    retry_btn.draw(screen)
+    menu_btn.draw(screen)
 
 

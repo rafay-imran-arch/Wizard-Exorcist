@@ -89,17 +89,24 @@ def build_dungeon():
             bat(240,120,128,128),
             bat(200,300,128,128),
             pumpkin(500,128,128,128),
-            slime(300,650,128,128)
-        ]),
+            slime(300,650,128,128)],
+            image_folder = os.path.join("rooms", "princeroom"),
+            image_name = "princeroom"
+            
+            ),
 
         "dungeon stairs": Room('The stairs which lead to dungeon',[
-            oneI(700,400,128,128)
-        ]),
+            oneI(700,400,128,128)],
+            image_folder = os.path.join("room", "dungeonstairs"),
+            image_name = "dungeonstairs"
+            ),
 
         "banquet hall": Room('The banquet hall',[
             ghost(432,124,128,128),
-            ghost(532,364,128,128)
-        ]),
+            ghost(532,364,128,128)],
+            image_folder = os.path.join("room", "hall"),
+            image_name = "hall"
+            ),
 
         # WEST WING HALLWAY
 
@@ -226,7 +233,7 @@ def build_dungeon():
     rooms['west wing hallway3'].hidden_doors = ['north']
 
     #The East Wing Hallway
-    rooms['east wing hallway1'].hidden_doors = ['south', 'north']
+    rooms['east wing hallway1'].hidden_doors = ['south']
     rooms['east wing hallway2'].hidden_doors = ['north', 'south']
     rooms['east wing hallway3'].hidden_doors = ['north']
 
