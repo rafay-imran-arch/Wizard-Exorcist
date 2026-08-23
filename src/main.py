@@ -1,11 +1,30 @@
+import os
+import sys
+
+# Lock working directory to the executable's folder when running compiled binary
+if getattr(sys, 'frozen', False):
+    os.chdir(os.path.dirname(sys.executable))
+
 import pygame
 import asyncio
-import os 
 
-from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest, hp_particles
-from spells import projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
-from dungeon import build_dungeon
-from ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen, draw_victory_screen
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+from src.sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest, hp_particles
+from src.spells import projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
+from src.dungeon import build_dungeon
+from src.ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen, draw_victory_screen
+
+# Helper to find assets reliably on Desktop AND Pygbag WebAssembly
+def get_asset_path(*paths):
+    p1 = os.path.join(BASE_DIR, 'assets', *paths)
+    if os.path.exists(p1): return p1
+    p2 = os.path.join(BASE_DIR, 'src', 'assets', *paths)
+    if os.path.exists(p2): return p2
+    return os.path.join('assets', *paths)
 
 async def main():
 
@@ -57,7 +76,7 @@ async def main():
 
     for i in range(door_frame_count):
         filename = f"frame{i:04d}.png"
-        door_assets = os.path.join("src", "assets", "effects", "eff", "PNG", "Explosions", "doors", "large", filename)
+        door_assets = get_asset_path("effects", "eff", "PNG", "Explosions", "doors", "large", filename)
         
         if os.path.exists(door_assets):
             raw_img = pygame.image.load(door_assets).convert_alpha()
@@ -69,7 +88,11 @@ async def main():
     east_door_rect = pygame.Rect(screen_width - door_depth, (screen_height // 2) - (door_width // 2), door_depth, door_width)
     west_door_rect = pygame.Rect(0, (screen_height // 2) - (door_width // 2), door_depth, door_width)
 
-    custom_font = pygame.font.Font("src/assets/ux/font/NicerNightie.ttf", 30)
+    font_path = get_asset_path("ux", "font", "NicerNightie.ttf")
+    try:
+        custom_font = pygame.font.Font(font_path, 30)
+    except Exception:
+        custom_font = pygame.font.SysFont('Arial', 30)
 
     play_btn = button((screen_width // 2) - 120, 380, 240, 60, "Enter Castle", custom_font)
     exit_btn = button((screen_width // 2) - 120, 470, 240, 60, "Abandon", custom_font)
@@ -202,26 +225,50 @@ async def main():
 
         draw_skill_hud(screen, screen_height, dash_cooldown, repel_cooldown)
 
-    sound_dir = os.path.join('src', 'assets', 'sounds')
-    unlock_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'unlock.mp3'))
-    recharge_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'recharge.mp3'))
-    hurt_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'hurt.mp3'))
-    spell_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell.mp3'))
-    spell2_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell2.mp3'))
-    pygame.mixer.music.load(os.path.join(sound_dir, "bg.mp3"))
-    pygame.mixer.music.play(-1)
+    # Dummy object prevents crashes if WebAudio / Pygbag fails to load a file
+    class DummySound:
+        def play(self, *args, **kwargs): pass
+        def stop(self, *args, **kwargs): pass
+        def set_volume(self, *args, **kwargs): pass
+
+    def load_sfx(filename):
+        # Look relative to project root or current working dir
+        possible_paths = [
+            os.path.join(BASE_DIR, "src", "assets", "sounds", filename),
+            os.path.join(BASE_DIR, "assets", "sounds", filename),
+            os.path.join("src", "assets", "sounds", filename),
+            os.path.join("assets", "sounds", filename),
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                try:
+                    return pygame.mixer.Sound(path)
+                except Exception as e:
+                    print(f"Failed to load sound {path}: {e}")
+        print(f"Warning: Sound '{filename}' not found. Using fallback.")
+        return DummySound()
+
+    # Explicitly defined before sfx_list assignment
+    unlock_sound   = load_sfx('unlock.ogg')
+    recharge_sound = load_sfx('recharge.ogg')
+    hurt_sound     = load_sfx('hurt.ogg')
+    spell_sound    = load_sfx('spell.ogg')
+    spell2_sound   = load_sfx('spell2.ogg')
 
     sfx_list = [unlock_sound, recharge_sound, hurt_sound, spell_sound, spell2_sound]
-
     panel_x = (screen_width - 440) // 2
     bgm_slider = slider(panel_x + 130, screen_height // 2 - 30, 200, 16, initial_val=0.5)
     sfx_slider = slider(panel_x + 130, screen_height // 2 - 80, 200, 16, initial_val=0.7)
 
-    pygame.mixer.music.set_volume(bgm_slider.val)
+    try:
+        pygame.mixer.music.set_volume(bgm_slider.val)
+    except Exception:
+        pass
+
     for sfx in sfx_list:
         sfx.set_volume(sfx_slider.val)
 
-    font = pygame.font.Font("src/assets/ux/font/NicerNightie.ttf", 30)
+    font = custom_font
     spell_limit = 5
 
     run = True
@@ -248,7 +295,10 @@ async def main():
                 bgm_slider.handle_event(event)
                 sfx_slider.handle_event(event)
 
-                pygame.mixer.music.set_volume(bgm_slider.val)
+                try:
+                    pygame.mixer.music.set_volume(bgm_slider.val)
+                except Exception:
+                    pass
                 for sfx in sfx_list:
                     sfx.set_volume(sfx_slider.val)
 
@@ -262,11 +312,9 @@ async def main():
 
         if game_state == "MENU":    
             draw_start_menu(screen, screen_width, screen_height, play_btn, exit_btn, mouse_pos)
-            pygame.display.update()
 
         elif game_state == "victory":
             draw_victory_screen(screen, font, screen_width, screen_height, score, menu_btn, retry_btn, mouse_pos)
-            pygame.display.update()
 
         elif game_state == "game_over":
             render_game(bat_projectiles)

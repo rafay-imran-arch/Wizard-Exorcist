@@ -2,10 +2,11 @@ import pygame
 import asyncio
 import os 
 
-from sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest, hp_particles
-from spells import projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
-from dungeon import build_dungeon
-from ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen, draw_victory_screen
+
+from src.sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest, hp_particles
+from src.spells import projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
+from src.dungeon import build_dungeon
+from src.ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen, draw_victory_screen
 
 async def main():
 
@@ -202,14 +203,14 @@ async def main():
 
         draw_skill_hud(screen, screen_height, dash_cooldown, repel_cooldown)
 
-    sound_dir = os.path.join('src', 'assets', 'sounds')
-    unlock_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'unlock.mp3'))
-    recharge_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'recharge.mp3'))
-    hurt_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'hurt.mp3'))
-    spell_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell.mp3'))
-    spell2_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell2.mp3'))
-    pygame.mixer.music.load(os.path.join(sound_dir, "bg.ogg"))
-    pygame.mixer.music.play(-1)
+    # sound_dir = os.path.join('src', 'assets', 'sounds')
+    # unlock_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'unlock.mp3'))
+    # recharge_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'recharge.mp3'))
+    # hurt_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'hurt.mp3'))
+    # spell_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell.mp3'))
+    # spell2_sound = pygame.mixer.Sound(os.path.join(sound_dir, 'spell2.mp3'))
+    # pygame.mixer.music.load(os.path.join(sound_dir, "bg.ogg"))
+    # pygame.mixer.music.play(-1)
 
     sfx_list = [unlock_sound, recharge_sound, hurt_sound, spell_sound, spell2_sound]
 
@@ -262,11 +263,9 @@ async def main():
 
         if game_state == "MENU":    
             draw_start_menu(screen, screen_width, screen_height, play_btn, exit_btn, mouse_pos)
-            pygame.display.update()
 
         elif game_state == "victory":
             draw_victory_screen(screen, font, screen_width, screen_height, score, menu_btn, retry_btn, mouse_pos)
-            pygame.display.update()
 
         elif game_state == "game_over":
             render_game(bat_projectiles)
@@ -653,6 +652,7 @@ async def main():
             if player_death_timer <= 0:
                 game_state = "game_over"
 
+        # --- MOVE DISPLAY UPDATE HERE (OUTSIDE ELIF) ---
         pygame.display.update()
         clock.tick(60)
         await asyncio.sleep(0)

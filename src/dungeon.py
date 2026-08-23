@@ -20,7 +20,7 @@ class Room():
 
 def build_dungeon():
 
-    from sprites import enemy, ghost, bat, slime, pumpkin, oneI
+    from src.sprites import enemy, ghost, bat, slime, pumpkin, oneI
 
     rooms = {
         "spawn room": Room("The spawn point", [

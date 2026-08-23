@@ -3,6 +3,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Ignore PyInstaller build outputs and executables
+build/
+dist/
+*.spec
+
+# Ignore Pygbag artifacts
+.pygbag/
+*.apk
+*.tar.gz
+
 # Ignore local virtual environments (prevents system conflicts)
 venv/
 ENV/
