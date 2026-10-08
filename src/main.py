@@ -1,11 +1,13 @@
 import os
 import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR =os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
- 
+if getattr(sys, 'frozen', False):
+    os.chdir(getattr(sys, '_MEIPASS', os.path.dirname(sys.executable)))
+
 def get_asset_path(*paths) -> str:
 
     relative_path = os.path.join(*paths)
