@@ -1,30 +1,30 @@
 import os
 import sys
 
-# Lock working directory to the executable's folder when running compiled binary
-if getattr(sys, 'frozen', False):
-    os.chdir(os.path.dirname(sys.executable))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+ 
+def get_asset_path(*paths) -> str:
+
+    relative_path = os.path.join(*paths)
+    if getattr(sys, 'frozen', False):
+        base_path = getattr(sys,'_MEIPASS', os.path.dirname(sys.executable))
+        return os.path.join(base_path, relative_path)
+
+    return os.path.join(BASE_DIR, relative_path)
 
 import pygame
 import asyncio
 
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
 
 from src.sprites import player, enemy, ghost, bat, slime, pumpkin, keys_drop, oneI, chest, hp_particles
 from src.spells import projectile_spell, repel_spell, enemy_projectile_bat, oneI_spell, oneI_beam, oneI_radial_burst, oneI_radial, mana_charge 
 from src.dungeon import build_dungeon
 from src.ui import button, slider, draw_pause_menu, draw_ability_icons, draw_skill_hud, draw_start_menu, draw_game_over_screen, draw_victory_screen
 
-# Helper to find assets reliably on Desktop AND Pygbag WebAssembly
-def get_asset_path(*paths):
-    p1 = os.path.join(BASE_DIR, 'assets', *paths)
-    if os.path.exists(p1): return p1
-    p2 = os.path.join(BASE_DIR, 'src', 'assets', *paths)
-    if os.path.exists(p2): return p2
-    return os.path.join('assets', *paths)
+
 
 async def main():
 

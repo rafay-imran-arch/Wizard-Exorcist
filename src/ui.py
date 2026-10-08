@@ -2,10 +2,18 @@
 
 import pygame
 import os
-
-
+import sys 
 #setting up the font assets for the all the texts 
-font_path = "src/assets/ux/font/NicerNightie.ttf"
+def get_ui_asset_path(*paths):
+    relative_path = os.path.join(*paths)
+    if getattr(sys, 'frozen', False):
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+        return os.path.join(base_path, relative_path)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(project_root, relative_path)
+
+    
+font_path = get_ui_asset_path("src", "assets", "ux", "font", "NicerNightie.ttf")
 custom_font = pygame.font.Font(font_path, 30)
 title_font = pygame.font.Font(font_path, 60)
 
