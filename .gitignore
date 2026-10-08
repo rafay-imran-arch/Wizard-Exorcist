@@ -7,7 +7,7 @@ __pycache__/
 build/
 dist/
 *.spec
-
+*.zip
 # Ignore Pygbag artifacts
 .pygbag/
 *.apk
