@@ -6,7 +6,9 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 if getattr(sys, 'frozen', False):
-    os.chdir(getattr(sys, '_MEIPASS', os.path.dirname(sys.executable)))
+    exe_dir = os.path.dirname(sys.executable)
+    bundle_dir = getattr(sys, '_MEIPASS', exe_dir)
+    os.chdir(bundle_dir)
 
 def get_asset_path(*paths) -> str:
 
