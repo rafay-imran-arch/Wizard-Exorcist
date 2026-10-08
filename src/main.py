@@ -33,7 +33,10 @@ async def main():
     screen_width = 1280
     screen_height = 720 
 
-    screen = pygame.display.set_mode((screen_width, screen_height))
+    screen = pygame.display.set_mode(
+        (screen_width, screen_height),
+        pygame.RESIZABLE | pygame.SCALED
+        )
     pygame.display.set_caption("Wizard Exorcist")
     clock = pygame.time.Clock()
 
@@ -76,7 +79,7 @@ async def main():
 
     for i in range(door_frame_count):
         filename = f"frame{i:04d}.png"
-        door_assets = get_asset_path("effects", "eff", "PNG", "Explosions", "doors", "large", filename)
+        door_assets = get_asset_path("src", "assets", "effects", "eff", "PNG", "Explosions", "doors", "large", filename)
         
         if os.path.exists(door_assets):
             raw_img = pygame.image.load(door_assets).convert_alpha()
@@ -88,7 +91,7 @@ async def main():
     east_door_rect = pygame.Rect(screen_width - door_depth, (screen_height // 2) - (door_width // 2), door_depth, door_width)
     west_door_rect = pygame.Rect(0, (screen_height // 2) - (door_width // 2), door_depth, door_width)
 
-    font_path = get_asset_path("ux", "font", "NicerNightie.ttf")
+    font_path = get_asset_path("src", "assets", "ux", "font", "NicerNightie.ttf")
     try:
         custom_font = pygame.font.Font(font_path, 30)
     except Exception:
