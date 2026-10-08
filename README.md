@@ -10,7 +10,7 @@ Basically a fast paced basic dungeon crawler!
 ### Option 1: Download Pr-Compiled Binary
 
 1. Head to the [Latest GitHub Release](https://github.com/rafay-imran-arch/Wizard-Exorcist/releases/latest).
-2. Download `wizard_exorcist_desktop.zip`.
+2. Download `wizard_exorcist_game.zip`.
 3. Extract the `.zip` archive.
 4. Open the extracted folder and run:
    * **Linux:** Run `./main` (or launch via terminal)
