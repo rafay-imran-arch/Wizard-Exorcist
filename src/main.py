@@ -257,17 +257,23 @@ async def main():
     hurt_sound     = load_sfx('hurt.ogg')
     spell_sound    = load_sfx('spell.ogg')
     spell2_sound   = load_sfx('spell2.ogg')
+    bgm_path = get_asset_path("src", "assets", "sounds", "bg.ogg")
 
     sfx_list = [unlock_sound, recharge_sound, hurt_sound, spell_sound, spell2_sound]
     panel_x = (screen_width - 440) // 2
     bgm_slider = slider(panel_x + 130, screen_height // 2 - 30, 200, 16, initial_val=0.5)
     sfx_slider = slider(panel_x + 130, screen_height // 2 - 80, 200, 16, initial_val=0.7)
 
-    try:
-        pygame.mixer.music.set_volume(bgm_slider.val)
-    except Exception:
+    if os.path.exists(bgm_path):
+        try:
+            pygame.mixer.music.load(bgm_path)
+            pygame.mixer.music.set_volume(bgm_slider.val)
+            pygame.mixer.music.play(-1)
+            pygame.mixer.music.set_volume(bgm_slider.val)
+        except Exception:
+            pass
+    else:
         pass
-
     for sfx in sfx_list:
         sfx.set_volume(sfx_slider.val)
 
